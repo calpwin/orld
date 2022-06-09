@@ -30,3 +30,10 @@ export class CElementLayoutAlign {
   vertical = LayoutAlign.AlignCenter;
   horizontal = LayoutAlign.AlignCenter;
 }
+export interface CElementLayoutAlignUpdate {
+  displayMode?: LayoutDisplayMode;
+
+  flexDirection?: FlexDirection;
+  vertical?: LayoutAlign;
+  horizontal?: LayoutAlign;
+}

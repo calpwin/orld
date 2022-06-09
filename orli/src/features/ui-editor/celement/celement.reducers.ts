@@ -1,12 +1,13 @@
 import { ActionReducerMapBuilder } from "@reduxjs/toolkit";
 import { HashHelpers } from "../../../helpers/hash.helper";
 import { CElementHash, editorInitialState } from "../editor.state";
-import { CElement } from "./celement";
+import { CElement, CElementTransformation } from "./celement";
 import {
   celementAddAction,
   celementChangePositionAction,
   celementSelectAction,
   celementSetLayoutAlignAction,
+  celementTransformAction,
 } from "./celemet.actions";
 
 export const celementReducerMapBuilder = (
@@ -36,6 +37,36 @@ export const celementReducerMapBuilder = (
     const newHash = HashHelpers.overrideOne(state.celements, cel);
     state.celements = newHash;
     state.lastCElementChanged = cel;
+    state.lastCElementTransformed = {
+      celId: cel.id,
+      transformation: new CElementTransformation(
+        action.payload.position.x,
+        action.payload.position.y
+      ),
+    };
+  });
+
+  builder.addCase(celementTransformAction, (state, action) => {
+    if (action.payload.transformation.isEmpty()) return;
+
+    const cel = { ...state.celements[action.payload.celId] };
+    cel.x = action.payload.transformation.x ?? cel.x;
+    cel.y = action.payload.transformation.y ?? cel.y;
+    cel.width = action.payload.transformation.width ?? cel.width;
+    cel.height = action.payload.transformation.height ?? cel.height;
+
+    const newHash = HashHelpers.overrideOne(state.celements, cel);
+    state.celements = newHash;
+    state.lastCElementChanged = cel;
+    state.lastCElementTransformed = {
+      celId: cel.id,
+      transformation: new CElementTransformation(
+        action.payload.transformation.x,
+        action.payload.transformation.y,
+        action.payload.transformation.width,
+        action.payload.transformation.height
+      ),
+    };
   });
 
   builder.addCase(celementSetLayoutAlignAction, (state, action) => {
@@ -53,5 +84,14 @@ export const celementReducerMapBuilder = (
     const newHash = HashHelpers.overrideOne(state.celements, cel);
     state.celements = newHash;
     state.lastCElementChanged = cel;
+    state.lastCElementTransformed = {
+      celId: cel.id,
+      transformation: new CElementTransformation(
+        undefined,
+        undefined,
+        undefined,        
+        undefined,
+         action.payload.layoutAlign),
+    };
   });
 };

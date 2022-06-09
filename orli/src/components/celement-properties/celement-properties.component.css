@@ -13,12 +13,12 @@
     margin-top: 0;
   }
   
-  #properties-wrapper .cel-coord {
+  #properties-wrapper .cel-bound {
     display: flex;
     justify-content: space-between;
     height: 20px;
   }
-  #properties-wrapper .cel-coord .input {
+  #properties-wrapper .cel-bound .input {
     width: 45%;  
   }
   

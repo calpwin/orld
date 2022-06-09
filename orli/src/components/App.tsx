@@ -13,7 +13,8 @@ import { watch } from "../rx/watch";
 export class App extends React.Component<{}, {}> {
   private readonly _cElementService: CElementService;
 
-  private isEditorCreated = false;
+  private _isEditorCreated = false;
+  private _isEditorEventsBinded = false;
 
   constructor(props: any) {
     super(props);
@@ -42,7 +43,7 @@ export class App extends React.Component<{}, {}> {
   }
 
   private createEditor() {
-    if (this.isEditorCreated) return;
+    if (this._isEditorCreated) return;
 
     // The application will create a renderer using WebGL, if possible,
     // with a fallback to a canvas render. It will also setup the ticker
@@ -74,7 +75,6 @@ export class App extends React.Component<{}, {}> {
 
     const cel1 = this._cElementService.createCElement(0, 20, 60, 30, 0x66ccff);
     cel1.graphics.x = container.graphics.x;
-    // cel1.graphics.rotation = 0.5;
     container.addChild(cel1);
 
     const cel2 = this._cElementService.createCElement(0, 50, 60, 30, 0x66ccff);
@@ -83,10 +83,12 @@ export class App extends React.Component<{}, {}> {
 
     app.stage.addChild(container.graphics);
 
-    this.isEditorCreated = true;
+    this._isEditorCreated = true;
   }
 
   private bindEditorEvents() {
+    if (this._isEditorEventsBinded) return;
+
     let wSelectedCel = watch(() =>
       currentSelectedCelementSelector(store.getState().editor)
     );
@@ -103,5 +105,7 @@ export class App extends React.Component<{}, {}> {
         cel.isSelected = true;
       })
     );
+
+    this._isEditorEventsBinded = true;
   }
 }

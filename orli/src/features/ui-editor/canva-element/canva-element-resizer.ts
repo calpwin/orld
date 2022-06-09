@@ -1,10 +1,18 @@
 import { Circle, Graphics } from "pixi.js";
-import { CanvaElement, CanvaElementBound } from "./canva-element";
+import {
+  CanvaElement,
+  CanvaElementBound,
+  CanvaElementPosition,
+} from "./canva-element";
 import { watch } from "../../../rx/watch";
 import store from "../../../rx/store";
 import { lastEditorMouseMoveSelector } from "../editor/editor.selectors";
-import { celementChangePositionAction } from "../celement/celemet.actions";
+import {
+  celementChangePositionAction,
+  celementTransformAction,
+} from "../celement/celemet.actions";
 import { FlexboxAdapter } from "../../../services/flexbox-adapter";
+import { CElementTransformation } from "../celement/celement";
 
 export enum ResizerDirection {
   Left = 1,
@@ -91,10 +99,12 @@ export class CanvaElementResizer {
         if (!this._moving) return;
 
         const parentCaelBound = new CanvaElementBound(
-          this._parentCael.bound.x,
-          this._parentCael.bound.y,
           this._parentCael.bound.width,
           this._parentCael.bound.height
+        );
+        const parentCaelPostion = new CanvaElementPosition(
+          this._parentCael.position.x,
+          this._parentCael.position.y
         );
 
         this._offsetX = newVal.x - this._startMoveX;
@@ -102,12 +112,12 @@ export class CanvaElementResizer {
 
         switch (this._direction) {
           case ResizerDirection.Left:
-            parentCaelBound.x += this._offsetX;
+            parentCaelPostion.x += this._offsetX;
             parentCaelBound.width -= this._offsetX;
             this._circle.x += this._offsetX;
             break;
           case ResizerDirection.Top:
-            parentCaelBound.y += this._offsetY;
+            parentCaelPostion.y += this._offsetY;
             parentCaelBound.height -= this._offsetY;
             this._circle.y += this._offsetY;
             break;
@@ -124,24 +134,17 @@ export class CanvaElementResizer {
         this._startMoveX = newVal.x;
         this._startMoveY = newVal.y;
 
-        this._parentCael.setBound(
-          parentCaelBound.x,
-          parentCaelBound.y,
-          parentCaelBound.width,
-          parentCaelBound.height
-        );
-
         store.dispatch(
-          celementChangePositionAction({
+          celementTransformAction({
             celId: this._parentCael.id,
-            position: { x: parentCaelBound.x, y: parentCaelBound.y },
+            transformation: new CElementTransformation(
+              parentCaelPostion.x,
+              parentCaelPostion.y,
+              parentCaelBound.width,
+              parentCaelBound.height
+            ),
           })
-        );
-
-        new FlexboxAdapter().syncChildren(
-          this._parentCael,
-          store.getState().editor.celements[this._parentCael.id].layoutAlign
-        );
+        );        
       })
     );
   }

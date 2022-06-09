@@ -1,8 +1,11 @@
-import { CanvaElementBound } from "./canva-element";
+import { CElementTransformation } from "../celement/celement";
+import { CanvaElementBound, CanvaElementPosition } from "./canva-element";
 import { ResizerDirection, CanvaElementResizer } from "./canva-element-resizer";
 
-
-export class CanvaElementResizers extends Map<ResizerDirection, CanvaElementResizer> {
+export class CanvaElementResizers extends Map<
+  ResizerDirection,
+  CanvaElementResizer
+> {
   get isMoving() {
     return Array.from(this.values()).some((x) => x.moving);
   }
@@ -13,25 +16,26 @@ export class CanvaElementResizers extends Map<ResizerDirection, CanvaElementResi
     });
   }
 
-  public updateResizeresPosition(parentCaelBound: CanvaElementBound) {
+  public updateResizeresPosition(
+    parentCaelPosAndBound: CanvaElementPosition & CanvaElementBound) {
     Array.from(this.values()).forEach((resizer) => {
-      let x = parentCaelBound.x;
-      let y = parentCaelBound.y;
+      let x = parentCaelPosAndBound.x;
+      let y = parentCaelPosAndBound.y;
 
       switch (resizer.direction) {
         case ResizerDirection.Left:
-          y += parentCaelBound.height / 2;
+          y += parentCaelPosAndBound.height / 2;
           break;
         case ResizerDirection.Top:
-          x += parentCaelBound.width / 2;
+          x += parentCaelPosAndBound.width / 2;
           break;
         case ResizerDirection.Right:
-          x += parentCaelBound.width;
-          y += parentCaelBound.height / 2;
+          x += parentCaelPosAndBound.width;
+          y += parentCaelPosAndBound.height / 2;
           break;
         case ResizerDirection.Bottom:
-          x += parentCaelBound.width / 2;
-          y += parentCaelBound.height;
+          x += parentCaelPosAndBound.width / 2;
+          y += parentCaelPosAndBound.height;
           break;
       }
 

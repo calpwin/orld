@@ -44,12 +44,12 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.bound.x;
+    let previousShift = parent.position.x;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
       // child.graphics.x = parent.bound.x;
       // child.graphics.y = 0;
-      child.setBound(previousShift, child.bound.y);
+      child.setTransformation(previousShift, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
         previousShift += child.bound.width;
@@ -73,7 +73,7 @@ export class FlexboxAdapter {
       
       currentX = flexDirection === FlexDirection.Row ? currentX : (parent.bound.width - child.bound.width) / 2;
 
-      child.setBound(parent.bound.x + currentX, child.bound.y);
+      child.setTransformation(parent.position.x + currentX, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
         currentX += child.bound.width;
@@ -86,13 +86,11 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    console.log(parent.bound.x + " : " + parent.bound.width);
-
-    let previousShift = parent.bound.x + parent.bound.width;
+    let previousShift = parent.position.x + parent.bound.width;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      child.setBound(previousShift - child.bound.width, child.bound.y);
+      child.setTransformation(previousShift - child.bound.width, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
         previousShift -= child.bound.width;
@@ -115,7 +113,7 @@ export class FlexboxAdapter {
       const child = children[index];
 
       currentY = flexDirection === FlexDirection.Column ? currentY : (parent.bound.height - child.bound.height) / 2;
-      child.setBound(child.bound.x, parent.bound.y + currentY);
+      child.setTransformation(child.position.x, parent.position.y + currentY);
 
       if (flexDirection === FlexDirection.Column) {
         currentY += child.bound.height;
@@ -128,11 +126,11 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.bound.y;
+    let previousShift = parent.position.y;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      child.setBound(child.bound.x, previousShift);
+      child.setTransformation(child.position.x, previousShift);
 
       if (flexDirection === FlexDirection.Column) {
         previousShift += child.bound.height;
@@ -145,11 +143,11 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.bound.y + parent.bound.height;
+    let previousShift = parent.position.y + parent.bound.height;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      child.setBound(child.bound.x, previousShift - child.bound.height);
+      child.setTransformation(child.position.x, previousShift - child.bound.height);
 
       if (flexDirection === FlexDirection.Column) {
         previousShift -= child.bound.height;

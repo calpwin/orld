@@ -34,10 +34,17 @@ import store from "../../rx/store";
 import {
   celementChangePositionAction,
   celementSetLayoutAlignAction,
+  celementTransformAction,
 } from "../../features/ui-editor/celement/celemet.actions";
+import {
+  CanvaElementBound,
+  CanvaElementPosition,
+} from "../../features/ui-editor/canva-element/canva-element";
+import { CElementTransformation } from "../../features/ui-editor/celement/celement";
 
 class State {
-  celPosition: { x: number; y: number } = { x: 0, y: 0 };
+  celPosition = new CanvaElementPosition(0, 0);
+  celBound = new CanvaElementBound(0, 0);
   celLayoutAligin = new CElementLayoutAlign();
   celSelected = false;
 }
@@ -53,21 +60,57 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
 
   render() {
     const celCoord = (
-      <div className="row cel-coord">
+      <div className="row cel-bound">
         <Input
           className="input x-coord"
           type="number"
-          startAdornment={<InputAdornment position="start">w:</InputAdornment>}
+          startAdornment={<InputAdornment position="start">x:</InputAdornment>}
           value={Math.round(this.state.celPosition.x)}
-          onChange={(e) => this.onCelementPositionChanged(Number.parseInt(e.target.value), this.state.celPosition.y)}
+          onChange={(e) =>
+            this.onCelementPositionChanged(Number.parseInt(e.target.value))
+          }
         />
 
         <Input
           className="input y-coord"
           type="number"
-          startAdornment={<InputAdornment position="start">h:</InputAdornment>}
+          startAdornment={<InputAdornment position="start">y:</InputAdornment>}
           value={Math.round(this.state.celPosition.y)}
-          onChange={(e) => this.onCelementPositionChanged(this.state.celPosition.x, Number.parseInt(e.target.value))}
+          onChange={(e) =>
+            this.onCelementPositionChanged(
+              undefined,
+              Number.parseInt(e.target.value)
+            )
+          }
+        />
+
+        <Input
+          className="input width"
+          type="number"
+          startAdornment={<InputAdornment position="start">w:</InputAdornment>}
+          value={Math.round(this.state.celBound.width)}
+          onChange={(e) =>
+            this.onCelementPositionChanged(
+              undefined,
+              undefined,
+              Number.parseInt(e.target.value)
+            )
+          }
+        />
+
+        <Input
+          className="input height"
+          type="number"
+          startAdornment={<InputAdornment position="start">h:</InputAdornment>}
+          value={Math.round(this.state.celBound.height)}
+          onChange={(e) =>
+            this.onCelementPositionChanged(
+              undefined,
+              undefined,
+              undefined,
+              Number.parseInt(e.target.value)
+            )
+          }
         />
       </div>
     );
@@ -213,6 +256,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         this.setState({
           ...this.state,
           celPosition: { x: newVal!.x, y: newVal!.y },
+          celBound: { width: newVal!.width, height: newVal!.height },
           celLayoutAligin: {
             vertical: newVal!.layoutAlign.vertical,
             horizontal: newVal!.layoutAlign.horizontal,
@@ -301,13 +345,15 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
   };
 
   private onCelementPositionChanged = (
-    x: number,
-    y: number
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number
   ) => {
     store.dispatch(
-      celementChangePositionAction({
+      celementTransformAction({
         celId: store.getState().editor.currentSelectedCElementId!,
-        position: { x, y },
+        transformation: new CElementTransformation(x, y, width, height),
       })
     );
   };

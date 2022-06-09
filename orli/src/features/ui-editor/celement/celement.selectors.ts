@@ -10,3 +10,8 @@ export const lastCElementChangedSelector = createSelector(
   (state: typeof editorInitialState) => state.lastCElementChanged,
   (x) => x
 );
+
+export const lastCElementTransformedSelector = createSelector(  
+  (state: typeof editorInitialState) => state.lastCElementTransformed,
+  (x) => x
+);

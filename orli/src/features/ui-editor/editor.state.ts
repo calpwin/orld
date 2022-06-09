@@ -1,5 +1,5 @@
-import { createReducer, Dictionary } from "@reduxjs/toolkit";
-import { CElement } from "./celement/celement";
+import { createReducer } from "@reduxjs/toolkit";
+import { CElement, CElementTransformation } from "./celement/celement";
 import { celementReducerMapBuilder } from "./celement/celement.reducers";
 import { editorReducerMapBuilder } from "./editor/editor.reducers";
 
@@ -11,6 +11,9 @@ export const editorInitialState = {
 
   lastEditorMouseMove: { x: 0, y: 0 },
   lastCElementChanged: <CElement | undefined>undefined,
+  lastCElementTransformed: <
+    { celId: string; transformation: CElementTransformation } | undefined
+  >undefined,
 };
 
 export const editorReducer = createReducer(editorInitialState, (builder) => {
