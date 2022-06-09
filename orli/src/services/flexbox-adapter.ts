@@ -47,8 +47,8 @@ export class FlexboxAdapter {
     let previousShift = parent.position.x;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
-      // child.graphics.x = parent.bound.x;
-      // child.graphics.y = 0;
+      
+      child.graphics.position.set(0, 0);
       child.setTransformation(previousShift, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
@@ -73,6 +73,7 @@ export class FlexboxAdapter {
       
       currentX = flexDirection === FlexDirection.Row ? currentX : (parent.bound.width - child.bound.width) / 2;
 
+      child.graphics.position.set(0, 0);
       child.setTransformation(parent.position.x + currentX, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
@@ -90,6 +91,7 @@ export class FlexboxAdapter {
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
+      child.graphics.position.set(0, 0);
       child.setTransformation(previousShift - child.bound.width, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
@@ -113,6 +115,8 @@ export class FlexboxAdapter {
       const child = children[index];
 
       currentY = flexDirection === FlexDirection.Column ? currentY : (parent.bound.height - child.bound.height) / 2;
+
+      child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, parent.position.y + currentY);
 
       if (flexDirection === FlexDirection.Column) {
@@ -130,6 +134,7 @@ export class FlexboxAdapter {
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
+      child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, previousShift);
 
       if (flexDirection === FlexDirection.Column) {
@@ -147,6 +152,7 @@ export class FlexboxAdapter {
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
+      child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, previousShift - child.bound.height);
 
       if (flexDirection === FlexDirection.Column) {

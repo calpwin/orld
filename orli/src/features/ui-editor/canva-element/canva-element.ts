@@ -13,6 +13,7 @@ import { CanvaElementResizer, ResizerDirection } from "./canva-element-resizer";
 import { CanvaElementResizers } from "./CanvaElementResizers";
 import { lastCElementTransformedSelector } from "../celement/celement.selectors";
 import { FlexboxAdapter } from "../../../services/flexbox-adapter";
+import { LayoutDisplayMode } from "../celement/celement-layout";
 
 export class CanvaElement {
   readonly id!: string;
@@ -28,6 +29,9 @@ export class CanvaElement {
   private _rectHeight!: number;
 
   private _isSelected = false;
+
+  // Is element can be moved
+  private _isMovaeble = true;
 
   private readonly _children = new Map<string, CanvaElement>();
 
@@ -67,6 +71,15 @@ export class CanvaElement {
     this.redraw();
   }
 
+  /* Is element can be moved */
+  get isMovaeble() {
+    return this._isMovaeble;
+  }
+  /* Is element can be moved */
+  set isMovaeble(value: boolean) {
+    this._isMovaeble = value;
+  }
+
   onResizeStop = new Subject<string>();
 
   constructor() {
@@ -84,7 +97,7 @@ export class CanvaElement {
     this._rectHeight = height;
     this._rectangleFill = fill;
 
-    this.redraw();        
+    this.redraw();
 
     this._rectangle.on("mouseup", (event) => {
       this._resizers.stopMoving();
@@ -116,19 +129,27 @@ export class CanvaElement {
     return this._children.get(child.id);
   }
 
+  /* 
+    Set element transformation
+  */
   setTransformation(x?: number, y?: number, width?: number, height?: number) {
     this._rectX = x ?? this._rectX;
     this._rectY = y ?? this._rectY;
     this._rectWidth = width ?? this._rectWidth;
     this._rectHeight = height ?? this._rectHeight;
 
+    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+
     this.redraw();
     this._resizers.updateResizeresPosition({ ...this.bound, ...this.position });
 
-    new FlexboxAdapter().syncChildren(
-      this,
-      store.getState().editor.celements[this.id].layoutAlign
+    // disable movaeble for children if parent container not in Absolute display mode
+    this._children.forEach(
+      (x) =>
+        (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
     );
+
+    new FlexboxAdapter().syncChildren(this, layoutAlign);
   }
 
   /* 
@@ -196,9 +217,9 @@ export class CanvaElement {
 
   private removeResizers() {
     // this._rectangle.removeChildren();
-    this._resizers.forEach(x => {
+    this._resizers.forEach((x) => {
       this._rectangle.removeChild(x.circle);
-    });    
+    });
 
     this._resizers.clear();
   }
@@ -214,30 +235,41 @@ export class CanvaElement {
     });
 
     this._rectangle.on("mousedown", (event: InteractionEvent) => {
-      event.stopped = true;
-      event.stopPropagationHint = true;
-      event.stopPropagation();
+      if (!this._isMovaeble) {
+        event.stopped = true;
+        event.stopPropagationHint = true;
+        event.stopPropagation();
+        return;
+      }
 
       this._rectMoving = true;
       startMoveX = event.data.global.x;
       startMoveY = event.data.global.y;
+
+      event.stopped = true;
+      event.stopPropagationHint = true;
+      event.stopPropagation();
     });
 
     this._rectangle.on("mousemove", (event: InteractionEvent) => {
-      if (!this._rectMoving || this._resizers.isMoving) return;
+      if (!this._isMovaeble || !this._rectMoving || this._resizers.isMoving)
+        return;
+
       this._rectangle.x += event.data.global.x - startMoveX;
       this._rectangle.y += event.data.global.y - startMoveY;
 
       startMoveX = event.data.global.x;
-      startMoveY = event.data.global.y;
+      startMoveY = event.data.global.y;      
 
       event.stopPropagation();
     });
 
     this._rectangle.on("mouseup", (event: InteractionEvent) => {
-      event.stopPropagation();
+      if (!this._isMovaeble) return;
 
       this._rectMoving = false;
+
+      event.stopPropagation();
     });
   }
 
