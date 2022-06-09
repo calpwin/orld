@@ -1,11 +1,11 @@
 import { createAction } from "@reduxjs/toolkit";
 import { CElement } from "./celement";
-import { LayoutAlign, LayoutDisplayMode } from "./celement-layout";
+import { FlexDirection, LayoutAlign, LayoutDisplayMode } from "./celement-layout";
 
 export const celementAddAction = createAction<{ cel: CElement }>(
   "celement/add"
 );
-export const celementSelectAction = createAction<{ celId: string }>(
+export const celementSelectAction = createAction<{ celId: string | undefined }>(
   "celement/select"
 );
 
@@ -18,6 +18,7 @@ export const celementSetLayoutAlignAction = createAction<{
   celId: string;
   layoutAlign: {
     displayMode?: LayoutDisplayMode,
+    flexDirection?: FlexDirection,
     vertical?: LayoutAlign;
     horizontal?: LayoutAlign;
   };

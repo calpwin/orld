@@ -1,0 +1,15 @@
+.add-new-wrapper {
+    position: relative;
+    width: 70px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;    
+    border-right: 1px solid rgb(202, 202, 202);
+}
+
+.add-new-wrapper .new-cel {
+    margin-top: 20px;
+}
+.add-new-wrapper .new-cel:first-child {
+    margin-top: 0;
+}

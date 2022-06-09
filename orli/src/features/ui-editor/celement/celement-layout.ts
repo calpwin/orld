@@ -10,6 +10,14 @@ export enum LayoutOrientation {
   Horizontal = 2,
 }
 
+/* 
+  Direction of flex layout
+ */
+export enum FlexDirection {
+  Row = 1,
+  Column = 2,
+}
+
 export enum LayoutDisplayMode {
   Absolute = 1,
   Flex = 2,
@@ -18,6 +26,7 @@ export enum LayoutDisplayMode {
 export class CElementLayoutAlign {
   displayMode = LayoutDisplayMode.Flex;
 
+  flexDirection = FlexDirection.Row;
   vertical = LayoutAlign.AlignCenter;
   horizontal = LayoutAlign.AlignCenter;
 }

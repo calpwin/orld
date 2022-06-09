@@ -47,6 +47,8 @@ export const celementReducerMapBuilder = (
       action.payload.layoutAlign.horizontal ?? cel.layoutAlign.horizontal;
     cel.layoutAlign.displayMode =
       action.payload.layoutAlign.displayMode ?? cel.layoutAlign.displayMode;
+    cel.layoutAlign.flexDirection =
+      action.payload.layoutAlign.flexDirection ?? cel.layoutAlign.flexDirection;
 
     const newHash = HashHelpers.overrideOne(state.celements, cel);
     state.celements = newHash;
