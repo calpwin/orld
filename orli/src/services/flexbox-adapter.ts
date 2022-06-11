@@ -89,7 +89,7 @@ export class FlexboxAdapter {
       child.setTransformation(previousShift, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
-        previousShift += child.bound.width.value;
+        previousShift += child.bound.width.valueInPx;
       }
     }
   }
@@ -100,9 +100,9 @@ export class FlexboxAdapter {
     flexDirection: FlexDirection
   ) {
     const childrenTotalWidth = children
-      .map((x) => x.bound.width.value)
+      .map((x) => x.bound.width.valueInPx)
       .reduce((a, b) => a + b, 0);
-    const margin = (parent.bound.width.value - childrenTotalWidth) / 2;
+    const margin = (parent.bound.width.valueInPx - childrenTotalWidth) / 2;
 
     let currentX = margin;
     for (let index = 0; index < children.length; index++) {
@@ -111,13 +111,13 @@ export class FlexboxAdapter {
       currentX =
         flexDirection === FlexDirection.Row
           ? currentX
-          : (parent.bound.width.value - child.bound.width.value) / 2;
+          : (parent.bound.width.valueInPx - child.bound.width.valueInPx) / 2;
 
       child.graphics.position.set(0, 0);
       child.setTransformation(parent.position.x + currentX, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
-        currentX += child.bound.width.value;
+        currentX += child.bound.width.valueInPx;
       }
     }
   }
@@ -127,18 +127,18 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.x + parent.bound.width.value;
+    let previousShift = parent.position.x + parent.bound.width.valueInPx;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
       child.setTransformation(
-        previousShift - child.bound.width.value,
+        previousShift - child.bound.width.valueInPx,
         child.position.y
       );
 
       if (flexDirection === FlexDirection.Row) {
-        previousShift -= child.bound.width.value;
+        previousShift -= child.bound.width.valueInPx;
       }
     }
   }
@@ -149,9 +149,9 @@ export class FlexboxAdapter {
     flexDirection: FlexDirection
   ) {
     const childrenTotalHeight = children
-      .map((x) => x.bound.height.value)
+      .map((x) => x.bound.height.valueInPx)
       .reduce((a, b) => a + b, 0);
-    const margin = (parent.bound.height.value - childrenTotalHeight) / 2;
+    const margin = (parent.bound.height.valueInPx - childrenTotalHeight) / 2;
 
     let currentY = margin;
     for (let index = 0; index < children.length; index++) {
@@ -160,13 +160,13 @@ export class FlexboxAdapter {
       currentY =
         flexDirection === FlexDirection.Column
           ? currentY
-          : (parent.bound.height.value - child.bound.height.value) / 2;
+          : (parent.bound.height.valueInPx - child.bound.height.valueInPx) / 2;
 
       child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, parent.position.y + currentY);
 
       if (flexDirection === FlexDirection.Column) {
-        currentY += child.bound.height.value;
+        currentY += child.bound.height.valueInPx;
       }
     }
   }
@@ -184,7 +184,7 @@ export class FlexboxAdapter {
       child.setTransformation(child.position.x, previousShift);
 
       if (flexDirection === FlexDirection.Column) {
-        previousShift += child.bound.height.value;
+        previousShift += child.bound.height.valueInPx;
       }
     }
   }
@@ -194,25 +194,25 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.y + parent.bound.height.value;
+    let previousShift = parent.position.y + parent.bound.height.valueInPx;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
       child.setTransformation(
         child.position.x,
-        previousShift - child.bound.height.value
+        previousShift - child.bound.height.valueInPx
       );
 
       if (flexDirection === FlexDirection.Column) {
-        previousShift -= child.bound.height.value;
+        previousShift -= child.bound.height.valueInPx;
       }
     }
   }
 
   //#endregion
 
-  /*  */
+  /* Calculate current Canv Element dinesion in Px, mostly need to convert from percent */
   public calculateCaelDimensionInPx(
     dimension: CElementDimension,
     axis: CElementDimensionAxis,
