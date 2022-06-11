@@ -8,12 +8,17 @@ import {
   celementAddAction,
   celementSelectAction,
 } from "../celement/celemet.actions";
-import { CElement } from "../celement/celement";
+import {
+  CElement,
+  CElementDimension,
+  CElementDimensionAxis,
+} from "../celement/celement";
 import { CanvaElementResizer, ResizerDirection } from "./canva-element-resizer";
 import { CanvaElementResizers } from "./CanvaElementResizers";
 import { lastCElementTransformedSelector } from "../celement/celement.selectors";
 import { FlexboxAdapter } from "../../../services/flexbox-adapter";
-import { LayoutDisplayMode } from "../celement/celement-layout";
+import { CElementLayoutAlign, LayoutDisplayMode } from "../celement/celement-layout";
+import { CanvaElementDimension } from "./canva-element-dimension";
 
 export class CanvaElement {
   readonly id!: string;
@@ -25,14 +30,15 @@ export class CanvaElement {
 
   private _rectX!: number;
   private _rectY!: number;
-  private _rectWidth!: number;
-  private _rectHeight!: number;
+  private _rectWidth!: CanvaElementDimension;
+  private _rectHeight!: CanvaElementDimension;
 
   private _isSelected = false;
 
   // Is element can be moved
   private _isMovaeble = true;
 
+  private _parent?: CanvaElement;
   private readonly _children = new Map<string, CanvaElement>();
 
   get bound() {
@@ -41,6 +47,14 @@ export class CanvaElement {
 
   get position() {
     return new CanvaElementPosition(this._rectX, this._rectY);
+  }
+
+  get parent() {
+    return this._parent;
+  }
+
+  set parent(value: CanvaElement | undefined) {
+    this._parent = value;
   }
 
   get children() {
@@ -88,13 +102,35 @@ export class CanvaElement {
     this.bindEvents();
   }
 
-  create(x: number, y: number, width: number, height: number, fill = 0xffffff) {
+  create(
+    x: number,
+    y: number,
+    width: CElementDimension,
+    height: CElementDimension,
+    fill = 0xffffff
+  ) {    
+
+    const layoutAling = new CElementLayoutAlign();
+
+    const widthInPx = new FlexboxAdapter().calculateCaelDimensionInPx(
+      width,
+      CElementDimensionAxis.Width,
+      layoutAling,
+      undefined
+    );
+    const heightInPx = new FlexboxAdapter().calculateCaelDimensionInPx(
+      height,
+      CElementDimensionAxis.Height,
+      layoutAling,
+      undefined
+    ); // TODO set parent
+
     this._rectangle = new Graphics();
     this._rectangle.interactive = true;
     this._rectX = x;
     this._rectY = y;
-    this._rectWidth = width;
-    this._rectHeight = height;
+    this._rectWidth = new CanvaElementDimension(width.value, widthInPx, width.measurement);
+    this._rectHeight = new CanvaElementDimension(height.value, heightInPx, height.measurement);
     this._rectangleFill = fill;
 
     this.redraw();
@@ -105,17 +141,13 @@ export class CanvaElement {
 
     this.makeMovable();
 
-    store.dispatch(
-      celementAddAction({
-        cel: new CElement(
-          this.id,
-          this._rectX,
-          this._rectY,
-          this._rectWidth,
-          this._rectHeight
-        ),
-      })
-    );
+    store.dispatch(celementAddAction({cel: new CElement(
+      this.id,
+      this._rectX,
+      this._rectY,
+      this._rectWidth,
+      this._rectHeight
+    )}));
 
     return this._rectangle;
   }
@@ -123,6 +155,8 @@ export class CanvaElement {
   addChild(child: CanvaElement) {
     this._rectangle.addChild(child._rectangle);
     this._children.set(child.id, child);
+
+    child.parent = this;
   }
 
   getChild(child: CanvaElement) {
@@ -132,13 +166,30 @@ export class CanvaElement {
   /* 
     Set element transformation
   */
-  setTransformation(x?: number, y?: number, width?: number, height?: number) {
+  setTransformation(
+    x?: number,
+    y?: number,
+    width?: CElementDimension,
+    height?: CElementDimension
+  ) {
+    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+    const widthInPx = width ? new FlexboxAdapter().calculateCaelDimensionInPx(
+      width,
+      CElementDimensionAxis.Width,
+      layoutAlign,
+      this._parent
+    ) : null;
+    const heightInPx = height ? new FlexboxAdapter().calculateCaelDimensionInPx(
+      height,
+      CElementDimensionAxis.Height,
+      layoutAlign,
+      this._parent
+    ) : null;
+
     this._rectX = x ?? this._rectX;
     this._rectY = y ?? this._rectY;
-    this._rectWidth = width ?? this._rectWidth;
-    this._rectHeight = height ?? this._rectHeight;
-
-    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+    this._rectWidth = widthInPx ? new CanvaElementDimension(width!.value, widthInPx, width!.measurement) : this._rectWidth;
+    this._rectHeight = heightInPx ? new CanvaElementDimension(height!.value, heightInPx, height!.measurement) : this._rectHeight;
 
     this.redraw();
     this._resizers.updateResizeresPosition({ ...this.bound, ...this.position });
@@ -149,7 +200,7 @@ export class CanvaElement {
         (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
     );
 
-    new FlexboxAdapter().syncChildren(this, layoutAlign);
+    new FlexboxAdapter().syncChildrenPosition(this, layoutAlign);
   }
 
   /* 
@@ -166,14 +217,14 @@ export class CanvaElement {
     this._rectangle.drawRect(
       this._rectX,
       this._rectY,
-      this._rectWidth,
-      this._rectHeight
+      this._rectWidth.valueInPx,
+      this._rectHeight.valueInPx
     );
     this._rectangle.hitArea = new Rectangle(
       this._rectX - 10,
       this._rectY - 10,
-      this._rectWidth + 20,
-      this._rectHeight + 20
+      this._rectWidth.valueInPx + 20,
+      this._rectHeight.valueInPx + 20
     );
     this._rectangle.endFill();
 
@@ -259,7 +310,7 @@ export class CanvaElement {
       this._rectangle.y += event.data.global.y - startMoveY;
 
       startMoveX = event.data.global.x;
-      startMoveY = event.data.global.y;      
+      startMoveY = event.data.global.y;
 
       event.stopPropagation();
     });
@@ -283,5 +334,8 @@ export class CanvaElementPosition {
 }
 
 export class CanvaElementBound {
-  constructor(public width: number, public height: number) {}
+  constructor(
+    public width: CanvaElementDimension,
+    public height: CanvaElementDimension
+  ) {}
 }

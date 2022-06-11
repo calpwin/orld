@@ -23,7 +23,7 @@ export enum LayoutDisplayMode {
   Flex = 2,
 }
 
-export class CElementLayoutAlign {
+export class CElementLayoutAlign {  
   displayMode = LayoutDisplayMode.Flex;
 
   flexDirection = FlexDirection.Row;

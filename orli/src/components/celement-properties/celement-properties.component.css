@@ -13,13 +13,22 @@
     margin-top: 0;
   }
   
-  #properties-wrapper .cel-bound {
-    display: flex;
-    justify-content: space-between;
-    height: 20px;
+  #properties-wrapper .cel-bound-and-pos {    
   }
-  #properties-wrapper .cel-bound .input {
+  #properties-wrapper .cel-bound-and-pos .input {
     width: 45%;  
+  }
+  #properties-wrapper .cel-bound, #properties-wrapper .cel-pos {
+    display: flex;
+    justify-content: space-around;
+    height: 20px;    
+  }
+  #properties-wrapper .cel-pos {
+    margin-bottom: 20px;
+  }
+  #properties-wrapper .input-adorment {
+    font-size: 12px;
+    cursor: pointer;
   }
   
   #properties-wrapper .cel-layout-align {

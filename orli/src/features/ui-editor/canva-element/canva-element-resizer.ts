@@ -7,12 +7,11 @@ import {
 import { watch } from "../../../rx/watch";
 import store from "../../../rx/store";
 import { lastEditorMouseMoveSelector } from "../editor/editor.selectors";
-import {
-  celementChangePositionAction,
-  celementTransformAction,
-} from "../celement/celemet.actions";
-import { FlexboxAdapter } from "../../../services/flexbox-adapter";
+import { celementTransformAction } from "../celement/celemet.actions";
 import { CElementTransformation } from "../celement/celement";
+import { CanvaElementDimension } from "./canva-element-dimension";
+import { EditorService } from "../../../services/editor.service";
+import { Ioc } from "../../../base/config.inversify";
 
 export enum ResizerDirection {
   Left = 1,
@@ -22,6 +21,7 @@ export enum ResizerDirection {
 }
 
 export class CanvaElementResizer {
+  private readonly _editorService: EditorService;
   private readonly _circle: Graphics;
 
   private _moving = false;
@@ -56,8 +56,11 @@ export class CanvaElementResizer {
 
   constructor(
     readonly _direction: ResizerDirection,
-    readonly _parentCael: CanvaElement
+    /* Resizer Canva Element */
+    readonly _cael: CanvaElement
   ) {
+    this._editorService = Ioc.Conatiner.get<EditorService>(EditorService);
+
     this._circle = new Graphics();
     this._circle.beginFill(0x9966ff);
     this._circle.drawCircle(0, 0, 3);
@@ -65,9 +68,6 @@ export class CanvaElementResizer {
     this._circle.endFill();
 
     this._circle.interactive = true;
-
-    // this._startMoveX = this._parentCael.bound.x;
-    // this._startMoveY = this._parentCael.bound.y;
 
     this.bindevents();
   }
@@ -82,7 +82,7 @@ export class CanvaElementResizer {
     });
 
     this._circle.on("mouseup", (event) => {
-      this._parentCael.onResizeStop.next(this._parentCael.id);
+      this._cael.onResizeStop.next(this._cael.id);
 
       event.stopPropagation();
     });
@@ -99,12 +99,12 @@ export class CanvaElementResizer {
         if (!this._moving) return;
 
         const parentCaelBound = new CanvaElementBound(
-          this._parentCael.bound.width,
-          this._parentCael.bound.height
+          this._cael.bound.width,
+          this._cael.bound.height
         );
         const parentCaelPostion = new CanvaElementPosition(
-          this._parentCael.position.x,
-          this._parentCael.position.y
+          this._cael.position.x,
+          this._cael.position.y
         );
 
         this._offsetX = newVal.x - this._startMoveX;
@@ -113,20 +113,46 @@ export class CanvaElementResizer {
         switch (this._direction) {
           case ResizerDirection.Left:
             parentCaelPostion.x += this._offsetX;
-            parentCaelBound.width -= this._offsetX;
+
+            parentCaelBound.width.valueInPx -= this._offsetX;
+            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+              parentCaelBound.width,
+              this._cael.parent?.bound.width ??
+                new CanvaElementDimension(this._editorService.app.stage.width)
+            );
+
             this._circle.x += this._offsetX;
             break;
           case ResizerDirection.Top:
             parentCaelPostion.y += this._offsetY;
-            parentCaelBound.height -= this._offsetY;
+
+            parentCaelBound.height.valueInPx -= this._offsetY;
+            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+              parentCaelBound.height,
+              this._cael.parent?.bound.height ??
+                new CanvaElementDimension(this._editorService.app.stage.height)
+            );
+
             this._circle.y += this._offsetY;
             break;
           case ResizerDirection.Right:
-            parentCaelBound.width += this._offsetX;
+            parentCaelBound.width.valueInPx += this._offsetX;
+            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+              parentCaelBound.width,
+              this._cael.parent?.bound.width ??
+                new CanvaElementDimension(this._editorService.app.stage.width)
+            );
+
             this._circle.x += this._offsetX;
             break;
           case ResizerDirection.Bottom:
-            parentCaelBound.height += this._offsetY;
+            parentCaelBound.height.valueInPx += this._offsetY;
+            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+              parentCaelBound.height,
+              this._cael.parent?.bound.height ??
+                new CanvaElementDimension(this._editorService.app.stage.height)
+            );
+
             this._circle.y += this._offsetY;
             break;
         }
@@ -136,7 +162,7 @@ export class CanvaElementResizer {
 
         store.dispatch(
           celementTransformAction({
-            celId: this._parentCael.id,
+            celId: this._cael.id,
             transformation: new CElementTransformation(
               parentCaelPostion.x,
               parentCaelPostion.y,
@@ -144,7 +170,7 @@ export class CanvaElementResizer {
               parentCaelBound.height
             ),
           })
-        );        
+        );
       })
     );
   }

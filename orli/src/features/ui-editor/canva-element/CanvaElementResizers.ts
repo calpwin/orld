@@ -24,18 +24,18 @@ export class CanvaElementResizers extends Map<
 
       switch (resizer.direction) {
         case ResizerDirection.Left:
-          y += parentCaelPosAndBound.height / 2;
+          y += parentCaelPosAndBound.height.valueInPx / 2;
           break;
         case ResizerDirection.Top:
-          x += parentCaelPosAndBound.width / 2;
+          x += parentCaelPosAndBound.width.valueInPx / 2;
           break;
         case ResizerDirection.Right:
-          x += parentCaelPosAndBound.width;
-          y += parentCaelPosAndBound.height / 2;
+          x += parentCaelPosAndBound.width.valueInPx;
+          y += parentCaelPosAndBound.height.valueInPx / 2;
           break;
         case ResizerDirection.Bottom:
-          x += parentCaelPosAndBound.width / 2;
-          y += parentCaelPosAndBound.height;
+          x += parentCaelPosAndBound.width.valueInPx / 2;
+          y += parentCaelPosAndBound.height.valueInPx;
           break;
       }
 

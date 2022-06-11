@@ -5,7 +5,6 @@ import {
   InputAdornment,
   ToggleButton,
   ToggleButtonGroup,
-  IconButton,
 } from "@mui/material";
 import React from "react";
 import {
@@ -32,7 +31,6 @@ import {
 } from "../../features/ui-editor/celement/celement.selectors";
 import store from "../../rx/store";
 import {
-  celementChangePositionAction,
   celementSetLayoutAlignAction,
   celementTransformAction,
 } from "../../features/ui-editor/celement/celemet.actions";
@@ -40,11 +38,19 @@ import {
   CanvaElementBound,
   CanvaElementPosition,
 } from "../../features/ui-editor/canva-element/canva-element";
-import { CElementTransformation } from "../../features/ui-editor/celement/celement";
+import {
+  CElementDimension,
+  CElementDimensionMeasurement,
+  CElementTransformation,
+} from "../../features/ui-editor/celement/celement";
+import { CanvaElementDimension } from "../../features/ui-editor/canva-element/canva-element-dimension";
 
 class State {
   celPosition = new CanvaElementPosition(0, 0);
-  celBound = new CanvaElementBound(0, 0);
+  celBound = new CanvaElementBound(
+    new CanvaElementDimension(0),
+    new CanvaElementDimension(0)
+  );
   celLayoutAligin = new CElementLayoutAlign();
   celSelected = false;
 }
@@ -60,58 +66,96 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
 
   render() {
     const celCoord = (
-      <div className="row cel-bound">
-        <Input
-          className="input x-coord"
-          type="number"
-          startAdornment={<InputAdornment position="start">x:</InputAdornment>}
-          value={Math.round(this.state.celPosition.x)}
-          onChange={(e) =>
-            this.onCelementPositionChanged(Number.parseInt(e.target.value))
-          }
-        />
+      <div className="row cel-bound-and-pos">
+        <div className="cel-pos">
+          <Input
+            className="input x-coord"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">x:</InputAdornment>
+            }
+            value={Math.round(this.state.celPosition.x)}
+            onChange={(e) =>
+              this.onCelementPositionChanged(Number.parseInt(e.target.value))
+            }
+          />
 
-        <Input
-          className="input y-coord"
-          type="number"
-          startAdornment={<InputAdornment position="start">y:</InputAdornment>}
-          value={Math.round(this.state.celPosition.y)}
-          onChange={(e) =>
-            this.onCelementPositionChanged(
-              undefined,
-              Number.parseInt(e.target.value)
-            )
-          }
-        />
+          <Input
+            className="input y-coord"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">y:</InputAdornment>
+            }
+            value={Math.round(this.state.celPosition.y)}
+            onChange={(e) =>
+              this.onCelementPositionChanged(
+                undefined,
+                Number.parseInt(e.target.value)
+              )
+            }
+          />
+        </div>
 
-        <Input
-          className="input width"
-          type="number"
-          startAdornment={<InputAdornment position="start">w:</InputAdornment>}
-          value={Math.round(this.state.celBound.width)}
-          onChange={(e) =>
-            this.onCelementPositionChanged(
-              undefined,
-              undefined,
-              Number.parseInt(e.target.value)
-            )
-          }
-        />
+        <div className="cel-bound">
+          <Input
+            className="input width"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">w:</InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <span
+                  className="input-adorment adorment-width"
+                  onClick={() => this.toggleDimensionMeasurement("width")}
+                >
+                  {this.state.celBound.width.measurement ===
+                  CElementDimensionMeasurement.Px
+                    ? "Px"
+                    : "%"}
+                </span>
+              </InputAdornment>
+            }
+            value={Math.round(this.state.celBound.width.value)}
+            onChange={(e) =>
+              this.onCelementPositionChanged(
+                undefined,
+                undefined,
+                Number.parseInt(e.target.value)
+              )
+            }
+          />
 
-        <Input
-          className="input height"
-          type="number"
-          startAdornment={<InputAdornment position="start">h:</InputAdornment>}
-          value={Math.round(this.state.celBound.height)}
-          onChange={(e) =>
-            this.onCelementPositionChanged(
-              undefined,
-              undefined,
-              undefined,
-              Number.parseInt(e.target.value)
-            )
-          }
-        />
+          <Input
+            className="input height"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">h:</InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <span
+                  className="input-adorment adorment-height"
+                  onClick={() => this.toggleDimensionMeasurement("height")}
+                >
+                  {this.state.celBound.height.measurement ===
+                  CElementDimensionMeasurement.Px
+                    ? "Px"
+                    : "%"}
+                </span>
+              </InputAdornment>
+            }
+            value={Math.round(this.state.celBound.height.value)}
+            onChange={(e) =>
+              this.onCelementPositionChanged(
+                undefined,
+                undefined,
+                undefined,
+                Number.parseInt(e.target.value)
+              )
+            }
+          />
+        </div>
       </div>
     );
 
@@ -256,7 +300,10 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         this.setState({
           ...this.state,
           celPosition: { x: newVal!.x, y: newVal!.y },
-          celBound: { width: newVal!.width, height: newVal!.height },
+          celBound: {
+            width: new CanvaElementDimension(newVal!.width.value, undefined, newVal!.width.measurement),
+            height: new CanvaElementDimension(newVal!.height.value, undefined, newVal!.height.measurement),
+          },
           celLayoutAligin: {
             vertical: newVal!.layoutAlign.vertical,
             horizontal: newVal!.layoutAlign.horizontal,
@@ -347,13 +394,56 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
   private onCelementPositionChanged = (
     x?: number,
     y?: number,
-    width?: number,
-    height?: number
+    widthVal?: number,
+    heightVal?: number
   ) => {
+    const width = widthVal
+      ? new CElementDimension(widthVal, this.state.celBound.width.measurement)
+      : undefined;
+    const height = heightVal
+      ? new CElementDimension(heightVal, this.state.celBound.height.measurement)
+      : undefined;
+
     store.dispatch(
       celementTransformAction({
         celId: store.getState().editor.currentSelectedCElementId!,
         transformation: new CElementTransformation(x, y, width, height),
+      })
+    );
+  };
+
+  private toggleDimensionMeasurement = (dimensionSide: "width" | "height") => {
+    const width =
+      dimensionSide === "width"
+        ? new CElementDimension(
+            this.state.celBound.width.value,
+            this.state.celBound.width.measurement ===
+            CElementDimensionMeasurement.Percent
+              ? CElementDimensionMeasurement.Px
+              : CElementDimensionMeasurement.Percent
+          )
+        : undefined;
+
+    const height =
+      dimensionSide === "height"
+        ? new CElementDimension(
+            this.state.celBound.height.value,
+            this.state.celBound.height.measurement ===
+            CElementDimensionMeasurement.Percent
+              ? CElementDimensionMeasurement.Px
+              : CElementDimensionMeasurement.Percent
+          )
+        : undefined;
+
+    store.dispatch(
+      celementTransformAction({
+        celId: store.getState().editor.currentSelectedCElementId!,
+        transformation: new CElementTransformation(
+          undefined,
+          undefined,
+          width,
+          height
+        ),
       })
     );
   };

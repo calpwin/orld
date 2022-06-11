@@ -2,16 +2,19 @@ import React from "react";
 import "./App.css";
 import { CElementService } from "../services/celement.service";
 import * as PIXI from "pixi.js";
-import { Ioc } from "../base/inversify.config";
+import { Ioc } from "../base/config.inversify";
 
 import { CElementPropertiesComponent } from "./celement-properties/celement-properties.component";
 import { CElementAddNewComponent } from "./celement-add-new/celement-add-new.component";
 import { currentSelectedCelementSelector } from "../features/ui-editor/celement/celement.selectors";
 import store from "../rx/store";
 import { watch } from "../rx/watch";
+import { CElementDimension } from "../features/ui-editor/celement/celement";
+import { EditorService } from "../services/editor.service";
 
 export class App extends React.Component<{}, {}> {
   private readonly _cElementService: CElementService;
+  private readonly _editorService!: EditorService;
 
   private _isEditorCreated = false;
   private _isEditorEventsBinded = false;
@@ -19,10 +22,9 @@ export class App extends React.Component<{}, {}> {
   constructor(props: any) {
     super(props);
 
-    const iocContainer = Ioc.Conatiner;
+    const iocContainer = Ioc.Conatiner;    
     this._cElementService = iocContainer.get<CElementService>(CElementService);
-
-    // this.state = new State();
+    this._editorService = iocContainer.get<EditorService>(EditorService);
   }
 
   render() {
@@ -53,6 +55,7 @@ export class App extends React.Component<{}, {}> {
       antialias: true,
     });
     const { renderer } = app;
+    this._editorService.app = app;
 
     this._cElementService.initialize(new PIXI.InteractionManager(renderer));
 
@@ -68,16 +71,28 @@ export class App extends React.Component<{}, {}> {
     const container = this._cElementService.createCElement(
       0,
       0,
-      400,
-      400,
+      new CElementDimension(400),
+      new CElementDimension(400),
       0x99aaaa
     );
 
-    const cel1 = this._cElementService.createCElement(0, 20, 60, 30, 0x66ccff);
+    const cel1 = this._cElementService.createCElement(
+      0,
+      20,
+      new CElementDimension(60),
+      new CElementDimension(30),
+      0x66ccff
+    );
     cel1.graphics.x = container.graphics.x;
     container.addChild(cel1);
 
-    const cel2 = this._cElementService.createCElement(0, 50, 60, 30, 0x66ccff);
+    const cel2 = this._cElementService.createCElement(
+      0,
+      50,
+      new CElementDimension(60),
+      new CElementDimension(30),
+      0x66ccff
+    );
     cel2.graphics.x = container.graphics.x;
     container.addChild(cel2);
 

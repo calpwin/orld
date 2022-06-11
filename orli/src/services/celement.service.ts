@@ -5,6 +5,7 @@ import store from "../rx/store";
 import { editorMouseMoveAction } from "../features/ui-editor/editor/editor.actions";
 import { celementSelectAction } from "../features/ui-editor/celement/celemet.actions";
 import { InteractionEvent } from "pixi.js";
+import { CElementDimension } from "../features/ui-editor/celement/celement";
 
 @injectable()
 export class CElementService {
@@ -43,8 +44,8 @@ export class CElementService {
   createCElement(
     x: number,
     y: number,
-    width: number,
-    height: number,
+    width: CElementDimension,
+    height: CElementDimension,
     fill = 0xffffff
   ) {
     const cel = new CanvaElement();

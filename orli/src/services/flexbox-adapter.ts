@@ -5,9 +5,26 @@ import {
   LayoutDisplayMode,
 } from "../features/ui-editor/celement/celement-layout";
 import { CanvaElement } from "../features/ui-editor/canva-element/canva-element";
+import {
+  CElementDimension,
+  CElementDimensionAxis,
+  CElementDimensionMeasurement,
+} from "../features/ui-editor/celement/celement";
+import { EditorService } from "./editor.service";
+import { Ioc } from "../base/config.inversify";
 
 export class FlexboxAdapter {
-  syncChildren(parent: CanvaElement, layoutAlign: CElementLayoutAlign) {
+
+  private readonly _editorService: EditorService;
+
+  constructor() {
+    this._editorService = Ioc.Conatiner.get<EditorService>(EditorService);    
+  }
+
+  //#region Sync cael position
+
+  /* Sync cael children element position for current LayoutAlign */
+  syncChildrenPosition(parent: CanvaElement, layoutAlign: CElementLayoutAlign) {
     if (layoutAlign.displayMode === LayoutDisplayMode.Absolute) return;
 
     const children = parent.children;
@@ -16,30 +33,50 @@ export class FlexboxAdapter {
 
     switch (layoutAlign.horizontal) {
       case LayoutAlign.AlignStart:
-        this.toHorizontalLeft(parent, children, layoutAlign.flexDirection);
+        this.toHorizontalLeftPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
         break;
       case LayoutAlign.AlignCenter:
-        this.toHorizontalCenter(parent, children, layoutAlign.flexDirection);
+        this.toHorizontalCenterPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
         break;
       case LayoutAlign.AliginEnd:
-        this.toHorizontalRight(parent, children, layoutAlign.flexDirection);
+        this.toHorizontalRightPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
         break;
     }
 
     switch (layoutAlign.vertical) {
       case LayoutAlign.AlignStart:
-        this.toVerticalBottom(parent, children, layoutAlign.flexDirection);
+        this.toVerticalBottomPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
         break;
       case LayoutAlign.AlignCenter:
-        this.toVerticalCenter(parent, children, layoutAlign.flexDirection);
+        this.toVerticalCenterPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
         break;
       case LayoutAlign.AliginEnd:
-        this.toVerticalTop(parent, children, layoutAlign.flexDirection);
+        this.toVerticalTopPosition(parent, children, layoutAlign.flexDirection);
         break;
     }
   }
 
-  private toHorizontalLeft(
+  private toHorizontalLeftPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
@@ -47,85 +84,94 @@ export class FlexboxAdapter {
     let previousShift = parent.position.x;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
-      
+
       child.graphics.position.set(0, 0);
       child.setTransformation(previousShift, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
-        previousShift += child.bound.width;
+        previousShift += child.bound.width.value;
       }
     }
   }
 
-  private toHorizontalCenter(
+  private toHorizontalCenterPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
     const childrenTotalWidth = children
-      .map((x) => x.bound.width)
+      .map((x) => x.bound.width.value)
       .reduce((a, b) => a + b, 0);
-    const margin = (parent.bound.width - childrenTotalWidth) / 2;
+    const margin = (parent.bound.width.value - childrenTotalWidth) / 2;
 
     let currentX = margin;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
-      
-      currentX = flexDirection === FlexDirection.Row ? currentX : (parent.bound.width - child.bound.width) / 2;
+
+      currentX =
+        flexDirection === FlexDirection.Row
+          ? currentX
+          : (parent.bound.width.value - child.bound.width.value) / 2;
 
       child.graphics.position.set(0, 0);
       child.setTransformation(parent.position.x + currentX, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
-        currentX += child.bound.width;
+        currentX += child.bound.width.value;
       }
     }
   }
 
-  private toHorizontalRight(
+  private toHorizontalRightPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.x + parent.bound.width;
+    let previousShift = parent.position.x + parent.bound.width.value;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
-      child.setTransformation(previousShift - child.bound.width, child.position.y);
+      child.setTransformation(
+        previousShift - child.bound.width.value,
+        child.position.y
+      );
 
       if (flexDirection === FlexDirection.Row) {
-        previousShift -= child.bound.width;
+        previousShift -= child.bound.width.value;
       }
     }
   }
 
-  private toVerticalCenter(
+  private toVerticalCenterPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
     const childrenTotalHeight = children
-      .map((x) => x.bound.height)
+      .map((x) => x.bound.height.value)
       .reduce((a, b) => a + b, 0);
-    const margin = (parent.bound.height - childrenTotalHeight) / 2;
+    const margin = (parent.bound.height.value - childrenTotalHeight) / 2;
 
     let currentY = margin;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      currentY = flexDirection === FlexDirection.Column ? currentY : (parent.bound.height - child.bound.height) / 2;
+      currentY =
+        flexDirection === FlexDirection.Column
+          ? currentY
+          : (parent.bound.height.value - child.bound.height.value) / 2;
 
       child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, parent.position.y + currentY);
 
       if (flexDirection === FlexDirection.Column) {
-        currentY += child.bound.height;
+        currentY += child.bound.height.value;
       }
     }
   }
 
-  private toVerticalTop(
+  private toVerticalTopPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
@@ -138,27 +184,60 @@ export class FlexboxAdapter {
       child.setTransformation(child.position.x, previousShift);
 
       if (flexDirection === FlexDirection.Column) {
-        previousShift += child.bound.height;
+        previousShift += child.bound.height.value;
       }
     }
   }
 
-  private toVerticalBottom(
+  private toVerticalBottomPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.y + parent.bound.height;
+    let previousShift = parent.position.y + parent.bound.height.value;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
-      child.setTransformation(child.position.x, previousShift - child.bound.height);
+      child.setTransformation(
+        child.position.x,
+        previousShift - child.bound.height.value
+      );
 
       if (flexDirection === FlexDirection.Column) {
-        previousShift -= child.bound.height;
+        previousShift -= child.bound.height.value;
       }
     }
+  }
+
+  //#endregion
+
+  /*  */
+  public calculateCaelDimensionInPx(
+    dimension: CElementDimension,
+    axis: CElementDimensionAxis,
+    layoutAlign: CElementLayoutAlign,
+    parent?: CanvaElement
+  ) {
+    if (dimension.measurement === CElementDimensionMeasurement.Px)
+      return dimension.value;    
+
+    const parentDimValPx =
+      axis === CElementDimensionAxis.Width
+        ? parent
+          ? parent.bound.width.valueInPx
+          : this._editorService.app.stage.width
+        : parent
+        ? parent.bound.height.valueInPx
+        : this._editorService.app.stage.height;
+
+    if (dimension.measurement === CElementDimensionMeasurement.Percent) {
+      return parentDimValPx * (dimension.value / 100);
+    }
+
+    throw Error(
+      `Current dimension type ${dimension.measurement} is not suppported`
+    );
   }
 }
 
