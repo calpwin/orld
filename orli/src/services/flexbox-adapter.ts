@@ -12,16 +12,17 @@ import {
 } from "../features/ui-editor/celement/celement";
 import { EditorService } from "./editor.service";
 import { Ioc } from "../base/config.inversify";
+import { injectable } from "inversify";
 
+@injectable()
 export class FlexboxAdapter {
-
   private readonly _editorService: EditorService;
 
   constructor() {
-    this._editorService = Ioc.Conatiner.get<EditorService>(EditorService);    
+    this._editorService = Ioc.Conatiner.get<EditorService>(EditorService);
   }
 
-  //#region Sync cael position
+  //#region Sync cael ition
 
   /* Sync cael children element position for current LayoutAlign */
   syncChildrenPosition(parent: CanvaElement, layoutAlign: CElementLayoutAlign) {
@@ -212,15 +213,37 @@ export class FlexboxAdapter {
 
   //#endregion
 
-  /* Calculate current Canv Element dinesion in Px, mostly need to convert from percent */
-  public calculateCaelDimensionInPx(
+  /**
+   * Synchronize children bound to parent
+   * @param parent
+   * @param layoutAlign
+   * @param parentChangeDimensionAxis If set only this dimension will be analize
+   */
+  syncChildrenBound(
+    parent: CanvaElement,
+    parentChangeDimensionAxis?: CElementDimensionAxis
+  ) {
+    parent.children.forEach((child) => {
+      child.synchronizeBoundWithParent(parentChangeDimensionAxis);
+    });
+  }
+
+  /**
+   * Calculate current Canv Element dimension in Px, mostly need to convert from percent
+   * @param dimension
+   * @param axis
+   * @param layoutAlign
+   * @param parent
+   * @returns
+   */
+  calculateCaelDimensionInPx(
     dimension: CElementDimension,
     axis: CElementDimensionAxis,
     layoutAlign: CElementLayoutAlign,
     parent?: CanvaElement
   ) {
     if (dimension.measurement === CElementDimensionMeasurement.Px)
-      return dimension.value;    
+      return dimension.value;
 
     const parentDimValPx =
       axis === CElementDimensionAxis.Width

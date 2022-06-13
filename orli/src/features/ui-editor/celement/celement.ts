@@ -34,8 +34,8 @@ export enum CElementDimensionMeasurement {
 }
 
 export enum CElementDimensionAxis {
-  Width = 1,
-  Height = 2,
+  Width = 1 << 1,
+  Height = 2 << 2,
 }
 
 export class CElementDimension {  

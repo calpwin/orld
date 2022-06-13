@@ -12,6 +12,7 @@ import {
   CElement,
   CElementDimension,
   CElementDimensionAxis,
+  CElementDimensionMeasurement,
 } from "../celement/celement";
 import { CanvaElementResizer, ResizerDirection } from "./canva-element-resizer";
 import { CanvaElementResizers } from "./CanvaElementResizers";
@@ -19,19 +20,22 @@ import { lastCElementTransformedSelector } from "../celement/celement.selectors"
 import { FlexboxAdapter } from "../../../services/flexbox-adapter";
 import { CElementLayoutAlign, LayoutDisplayMode } from "../celement/celement-layout";
 import { CanvaElementDimension } from "./canva-element-dimension";
+import { Ioc } from "../../../base/config.inversify";
 
 export class CanvaElement {
+  private readonly _resizers = new CanvaElementResizers();
+  private readonly _flexboxAdapter: FlexboxAdapter;
+
   readonly id!: string;
 
   private _rectangle!: Graphics;
   private _rectMoving = false;
   private _rectangleFill!: number;
-  private readonly _resizers = new CanvaElementResizers();
 
   private _rectX!: number;
   private _rectY!: number;
   private _rectWidth!: CanvaElementDimension;
-  private _rectHeight!: CanvaElementDimension;
+  private _rectHeight!: CanvaElementDimension;  
 
   private _isSelected = false;
 
@@ -99,6 +103,8 @@ export class CanvaElement {
   constructor() {
     this.id = this.createId();
 
+    this._flexboxAdapter = Ioc.Conatiner.get<FlexboxAdapter>(FlexboxAdapter);
+
     this.bindEvents();
   }
 
@@ -109,16 +115,15 @@ export class CanvaElement {
     height: CElementDimension,
     fill = 0xffffff
   ) {    
-
     const layoutAling = new CElementLayoutAlign();
 
-    const widthInPx = new FlexboxAdapter().calculateCaelDimensionInPx(
+    const widthInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
       width,
       CElementDimensionAxis.Width,
       layoutAling,
       undefined
     );
-    const heightInPx = new FlexboxAdapter().calculateCaelDimensionInPx(
+    const heightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
       height,
       CElementDimensionAxis.Height,
       layoutAling,
@@ -171,36 +176,43 @@ export class CanvaElement {
     y?: number,
     width?: CElementDimension,
     height?: CElementDimension
-  ) {
+  ) {    
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
-    const widthInPx = width ? new FlexboxAdapter().calculateCaelDimensionInPx(
+    const widthInPx = width ? this._flexboxAdapter.calculateCaelDimensionInPx(
       width,
       CElementDimensionAxis.Width,
       layoutAlign,
       this._parent
     ) : null;
-    const heightInPx = height ? new FlexboxAdapter().calculateCaelDimensionInPx(
+    const heightInPx = height ? this._flexboxAdapter.calculateCaelDimensionInPx(
       height,
       CElementDimensionAxis.Height,
       layoutAlign,
       this._parent
     ) : null;
 
+    let changedAxis = CElementDimensionAxis.Width | CElementDimensionAxis.Height;
+    !width && (changedAxis &= ~CElementDimensionAxis.Width);
+    !height && (changedAxis &= ~CElementDimensionAxis.Height);
+
     this._rectX = x ?? this._rectX;
     this._rectY = y ?? this._rectY;
     this._rectWidth = widthInPx ? new CanvaElementDimension(width!.value, widthInPx, width!.measurement) : this._rectWidth;
     this._rectHeight = heightInPx ? new CanvaElementDimension(height!.value, heightInPx, height!.measurement) : this._rectHeight;
 
-    this.redraw();
-    this._resizers.updateResizeresPosition({ ...this.bound, ...this.position });
+    this.applyTransformation(changedAxis);
 
-    // disable movaeble for children if parent container not in Absolute display mode
-    this._children.forEach(
-      (x) =>
-        (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
-    );
+    // this.redraw();
+    // this._resizers.updateResizeresPosition({ ...this.bound, ...this.position });
 
-    new FlexboxAdapter().syncChildrenPosition(this, layoutAlign);
+    // // disable movaeble for children if parent container not in Absolute display mode
+    // this._children.forEach(
+    //   (x) =>
+    //     (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
+    // );
+
+    // flexboxAdapter.syncChildrenPosition(this, layoutAlign);            
+    // flexboxAdapter.syncChildrenBound(this, changedAxis);
   }
 
   /* 
@@ -253,6 +265,74 @@ export class CanvaElement {
       })
     );
   }
+
+  /**
+   * Synchronize current Cael bound with parent ones.
+   * Mostly need for current Cael percent dimensions
+   * @param parentChangeDimensionAxis 
+   * @returns 
+   */
+   synchronizeBoundWithParent(parentChangeDimensionAxis?: CElementDimensionAxis) {
+    if (!this.parent) return;
+
+    let needRedraw = false;
+    let changedAxis = CElementDimensionAxis.Width | CElementDimensionAxis.Height;
+
+    if (
+      this.bound.width.measurement ===
+        CElementDimensionMeasurement.Percent &&
+      (!parentChangeDimensionAxis ||
+        (parentChangeDimensionAxis & CElementDimensionAxis.Width) === CElementDimensionAxis.Width)
+    ) {
+      const updatedWidthInPx = this.parent.bound.width.valueInPx * this.bound.width.value / 100;
+      if (updatedWidthInPx !== this._rectWidth.valueInPx) {
+        this._rectWidth.valueInPx = updatedWidthInPx;
+        needRedraw = true;
+      } else {
+        changedAxis &= ~CElementDimensionAxis.Width;
+      }
+    }
+
+    if (
+      this.bound.height.measurement ===
+        CElementDimensionMeasurement.Percent &&
+      (!parentChangeDimensionAxis ||
+        (parentChangeDimensionAxis & CElementDimensionAxis.Height) === CElementDimensionAxis.Height)
+    ) {
+      const updatedHeightInPx = this.parent.bound.height.valueInPx * this.bound.height.value / 100;
+      if (updatedHeightInPx !== this._rectHeight.valueInPx) {
+        this._rectHeight.valueInPx = updatedHeightInPx;
+        needRedraw = true;
+      } else {
+        changedAxis &= ~CElementDimensionAxis.Height
+      }
+    }
+
+    if (needRedraw) {
+      this.applyTransformation(changedAxis);
+    }
+  }
+
+  /**
+   * Apply Canva Element transformation (redraw element, sync resizers, update children bound eth)
+   * @param changedAxis What axis was changed
+  */
+  private applyTransformation(changedAxis?: CElementDimensionAxis) {
+    const flexboxAdapter = new FlexboxAdapter();
+    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+
+    this.redraw();
+    this._resizers.updateResizeresPosition({ ...this.bound, ...this.position });
+
+    // disable movaeble for children if parent container not in Absolute display mode
+    this._children.forEach(
+      (x) =>
+        (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
+    );
+
+    flexboxAdapter.syncChildrenBound(this, changedAxis);
+    flexboxAdapter.syncChildrenPosition(this, layoutAlign);            
+  }  
 
   private addResizers() {
     [
