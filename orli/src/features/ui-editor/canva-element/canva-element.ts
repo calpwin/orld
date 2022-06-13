@@ -317,8 +317,7 @@ export class CanvaElement {
    * Apply Canva Element transformation (redraw element, sync resizers, update children bound eth)
    * @param changedAxis What axis was changed
   */
-  private applyTransformation(changedAxis?: CElementDimensionAxis) {
-    const flexboxAdapter = new FlexboxAdapter();
+  private applyTransformation(changedAxis?: CElementDimensionAxis) {    
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
 
     this.redraw();
@@ -330,8 +329,8 @@ export class CanvaElement {
         (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
     );
 
-    flexboxAdapter.syncChildrenBound(this, changedAxis);
-    flexboxAdapter.syncChildrenPosition(this, layoutAlign);            
+    this._flexboxAdapter.syncChildrenBound(this, changedAxis);
+    this._flexboxAdapter.syncChildrenPosition(this, layoutAlign);            
   }  
 
   private addResizers() {

@@ -11,15 +11,15 @@ import {
   CElementDimensionMeasurement,
 } from "../features/ui-editor/celement/celement";
 import { EditorService } from "./editor.service";
-import { Ioc } from "../base/config.inversify";
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 
 @injectable()
 export class FlexboxAdapter {
-  private readonly _editorService: EditorService;
+  
+  @inject(EditorService)
+  private readonly _editorService!: EditorService;
 
-  constructor() {
-    this._editorService = Ioc.Conatiner.get<EditorService>(EditorService);
+  constructor() {    
   }
 
   //#region Sync cael ition
