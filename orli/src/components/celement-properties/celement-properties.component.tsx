@@ -22,6 +22,8 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import AlignVerticalCenterIcon from "@mui/icons-material/AlignVerticalCenter";
 import AlignVerticalBottomIcon from "@mui/icons-material/AlignVerticalBottom";
 import AlignVerticalTopIcon from "@mui/icons-material/AlignVerticalTop";
+import ViewColumnOutlinedIcon from "@mui/icons-material/ViewColumnOutlined";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { watch } from "../../rx/watch";
@@ -221,11 +223,35 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
             </ToggleButton>
             <ToggleButton
               className="action-btn"
+              value={LayoutAlign.AlignSpaceBetween}
+              key={LayoutAlign.AlignSpaceBetween}
+              size="small"
+              disabled={
+                this.state.celLayoutAligin.flexDirection ===
+                FlexDirection.Column
+              }
+            >
+              <ViewColumnIcon />
+            </ToggleButton>
+            <ToggleButton
+              className="action-btn"
               value={LayoutAlign.AlignCenter}
               key={LayoutAlign.AlignCenter}
               size="small"
             >
               <AlignHorizontalCenterIcon />
+            </ToggleButton>
+            <ToggleButton
+              className="action-btn"
+              value={LayoutAlign.AlignSpaceAround}
+              key={LayoutAlign.AlignSpaceAround}
+              size="small"
+              disabled={
+                this.state.celLayoutAligin.flexDirection ===
+                FlexDirection.Column
+              }
+            >
+              <ViewColumnOutlinedIcon />
             </ToggleButton>
             <ToggleButton
               className="action-btn"
@@ -257,11 +283,33 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
             </ToggleButton>
             <ToggleButton
               className="action-btn"
+              value={LayoutAlign.AlignSpaceBetween}
+              key={LayoutAlign.AlignSpaceBetween}
+              size="small"
+              disabled={
+                this.state.celLayoutAligin.flexDirection === FlexDirection.Row
+              }
+            >
+              <ViewColumnIcon style={{ transform: "rotate(90deg)" }} />
+            </ToggleButton>
+            <ToggleButton
+              className="action-btn"
               value={LayoutAlign.AlignCenter}
               key={LayoutAlign.AlignCenter}
               size="small"
             >
               <AlignVerticalCenterIcon />
+            </ToggleButton>
+            <ToggleButton
+              className="action-btn"
+              value={LayoutAlign.AlignSpaceAround}
+              key={LayoutAlign.AlignSpaceAround}
+              size="small"
+              disabled={
+                this.state.celLayoutAligin.flexDirection === FlexDirection.Row
+              }
+            >
+              <ViewColumnOutlinedIcon style={{ transform: "rotate(90deg)" }} />
             </ToggleButton>
             <ToggleButton
               className="action-btn"
@@ -301,8 +349,16 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           ...this.state,
           celPosition: { x: newVal!.x, y: newVal!.y },
           celBound: {
-            width: new CanvaElementDimension(newVal!.width.value, undefined, newVal!.width.measurement),
-            height: new CanvaElementDimension(newVal!.height.value, undefined, newVal!.height.measurement),
+            width: new CanvaElementDimension(
+              newVal!.width.value,
+              undefined,
+              newVal!.width.measurement
+            ),
+            height: new CanvaElementDimension(
+              newVal!.height.value,
+              undefined,
+              newVal!.height.measurement
+            ),
           },
           celLayoutAligin: {
             vertical: newVal!.layoutAlign.vertical,
@@ -319,8 +375,36 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     );
     store.subscribe(
       wCurrentSelectedCelement((newId, oldId) => {
+        let celStatePart = this.state;
+
+        if (newId) {
+          const cel = store.getState().editor.celements[newId];
+          celStatePart = {
+            ...celStatePart,
+            celPosition: { x: cel.x, y: cel.y },
+            celBound: {
+              width: new CanvaElementDimension(
+                cel.width.value,
+                undefined,
+                cel.width.measurement
+              ),
+              height: new CanvaElementDimension(
+                cel.height.value,
+                undefined,
+                cel.height.measurement
+              ),
+            },
+            celLayoutAligin: {
+              vertical: cel.layoutAlign.vertical,
+              horizontal: cel.layoutAlign.horizontal,
+              displayMode: cel.layoutAlign.displayMode,
+              flexDirection: cel.layoutAlign.flexDirection,
+            },
+          };
+        }
+
         this.setState({
-          ...this.state,
+          ...celStatePart,
           celSelected: newId !== undefined,
         });
       })

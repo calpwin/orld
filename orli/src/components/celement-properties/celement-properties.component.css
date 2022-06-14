@@ -43,6 +43,7 @@
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
+    margin-right: 20px;
   }
   #properties-wrapper .cel-layout-align .flex-align {
     display: flex;

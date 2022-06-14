@@ -2,7 +2,9 @@ export enum LayoutAlign {
   AlignCenter = 1,
   AlignStart = 2,
   AliginEnd = 3,
-  None = 4,
+  AlignSpaceBetween = 4,
+  AlignSpaceAround = 5,
+  None = 6,
 }
 
 export enum LayoutOrientation {

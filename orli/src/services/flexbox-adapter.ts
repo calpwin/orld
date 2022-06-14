@@ -15,12 +15,10 @@ import { inject, injectable } from "inversify";
 
 @injectable()
 export class FlexboxAdapter {
-  
   @inject(EditorService)
   private readonly _editorService!: EditorService;
 
-  constructor() {    
-  }
+  constructor() {}
 
   //#region Sync cael ition
 
@@ -40,8 +38,22 @@ export class FlexboxAdapter {
           layoutAlign.flexDirection
         );
         break;
+      case LayoutAlign.AlignSpaceBetween:
+        this.toHorizontalSpaceBetweenPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
+        break;
       case LayoutAlign.AlignCenter:
         this.toHorizontalCenterPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
+        break;
+      case LayoutAlign.AlignSpaceAround:
+        this.toHorizontalSpaceAroundPosition(
           parent,
           children,
           layoutAlign.flexDirection
@@ -54,11 +66,24 @@ export class FlexboxAdapter {
           layoutAlign.flexDirection
         );
         break;
+      default:
+        throw Error(
+          `Layout align: ${
+            LayoutAlign[layoutAlign.horizontal]
+          } is not supported`
+        );
     }
 
     switch (layoutAlign.vertical) {
       case LayoutAlign.AlignStart:
         this.toVerticalBottomPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
+        break;
+      case LayoutAlign.AlignSpaceBetween:
+        this.toVerticalSpaceBetweenPosition(
           parent,
           children,
           layoutAlign.flexDirection
@@ -71,9 +96,20 @@ export class FlexboxAdapter {
           layoutAlign.flexDirection
         );
         break;
+      case LayoutAlign.AlignSpaceAround:
+        this.toVerticalSpaceAroundPosition(
+          parent,
+          children,
+          layoutAlign.flexDirection
+        );
+        break;
       case LayoutAlign.AliginEnd:
         this.toVerticalTopPosition(parent, children, layoutAlign.flexDirection);
         break;
+      default:
+        throw Error(
+          `Layout align: ${LayoutAlign[layoutAlign.vertical]} is not supported`
+        );
     }
   }
 
@@ -92,6 +128,33 @@ export class FlexboxAdapter {
       if (flexDirection === FlexDirection.Row) {
         previousShift += child.bound.width.valueInPx;
       }
+    }
+  }
+
+  private toHorizontalSpaceBetweenPosition(
+    parent: CanvaElement,
+    children: CanvaElement[],
+    flexDirection: FlexDirection
+  ) {
+    if (flexDirection !== FlexDirection.Row)
+      throw Error("Space between for non main axis is not suported");
+
+    const childrenTotalWidth = children
+      .map((x) => x.bound.width.valueInPx)
+      .reduce((a, b) => a + b, 0);
+    const spaceCount = children.length - 1;
+    const margin =
+      spaceCount > 0
+        ? (parent.bound.width.valueInPx - childrenTotalWidth) / spaceCount
+        : 0;
+
+    let previousShift = parent.position.x;
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+
+      child.setTransformation(previousShift, child.position.y);
+
+      previousShift += margin + child.bound.width.valueInPx;
     }
   }
 
@@ -123,6 +186,33 @@ export class FlexboxAdapter {
     }
   }
 
+  private toHorizontalSpaceAroundPosition(
+    parent: CanvaElement,
+    children: CanvaElement[],
+    flexDirection: FlexDirection
+  ) {
+    if (flexDirection !== FlexDirection.Row)
+      throw Error("Space around for non main axis is not suported");
+
+    const childrenTotalWidth = children
+      .map((x) => x.bound.width.valueInPx)
+      .reduce((a, b) => a + b, 0);
+    const spaceCount = children.length + 1;
+    const margin =
+      spaceCount > 0
+        ? (parent.bound.width.valueInPx - childrenTotalWidth) / spaceCount
+        : 0;
+
+    let previousShift = parent.position.x + margin;
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+
+      child.setTransformation(previousShift, child.position.y);
+
+      previousShift += margin + child.bound.width.valueInPx;
+    }
+  }
+
   private toHorizontalRightPosition(
     parent: CanvaElement,
     children: CanvaElement[],
@@ -141,6 +231,51 @@ export class FlexboxAdapter {
       if (flexDirection === FlexDirection.Row) {
         previousShift -= child.bound.width.valueInPx;
       }
+    }
+  }
+
+  private toVerticalTopPosition(
+    parent: CanvaElement,
+    children: CanvaElement[],
+    flexDirection: FlexDirection
+  ) {
+    let previousShift = parent.position.y;
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+
+      child.graphics.position.set(0, 0);
+      child.setTransformation(child.position.x, previousShift);
+
+      if (flexDirection === FlexDirection.Column) {
+        previousShift += child.bound.height.valueInPx;
+      }
+    }
+  }
+
+  private toVerticalSpaceBetweenPosition(
+    parent: CanvaElement,
+    children: CanvaElement[],
+    flexDirection: FlexDirection
+  ) {
+    if (flexDirection !== FlexDirection.Column)
+      throw Error("Space between for non main axis is not suported");
+
+    const childrenTotalHeight = children
+      .map((x) => x.bound.height.valueInPx)
+      .reduce((a, b) => a + b, 0);
+    const spaceCount = children.length - 1;
+    const margin =
+      spaceCount > 0
+        ? (parent.bound.height.valueInPx - childrenTotalHeight) / spaceCount
+        : 0;
+
+    let previousShift = parent.position.y;
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+
+      child.setTransformation(child.position.x, previousShift);
+
+      previousShift += margin + child.bound.height.valueInPx;
     }
   }
 
@@ -172,21 +307,30 @@ export class FlexboxAdapter {
     }
   }
 
-  private toVerticalTopPosition(
+  private toVerticalSpaceAroundPosition(
     parent: CanvaElement,
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.y;
+    if (flexDirection !== FlexDirection.Column)
+      throw Error("Space around for non main axis is not suported");
+
+    const childrenTotalHeight = children
+      .map((x) => x.bound.height.valueInPx)
+      .reduce((a, b) => a + b, 0);
+    const spaceCount = children.length + 1;
+    const margin =
+      spaceCount > 0
+        ? (parent.bound.height.valueInPx - childrenTotalHeight) / spaceCount
+        : 0;
+
+    let previousShift = parent.position.y + margin;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, previousShift);
 
-      if (flexDirection === FlexDirection.Column) {
-        previousShift += child.bound.height.valueInPx;
-      }
+      previousShift += margin + child.bound.height.valueInPx;
     }
   }
 

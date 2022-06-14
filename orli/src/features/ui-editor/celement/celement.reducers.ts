@@ -2,6 +2,7 @@ import { ActionReducerMapBuilder } from "@reduxjs/toolkit";
 import { HashHelpers } from "../../../helpers/hash.helper";
 import { CElementHash, editorInitialState } from "../editor.state";
 import { CElement, CElementTransformation } from "./celement";
+import { FlexDirection, LayoutAlign } from "./celement-layout";
 import {
   celementAddAction,
   celementChangePositionAction,
@@ -72,6 +73,14 @@ export const celementReducerMapBuilder = (
   builder.addCase(celementSetLayoutAlignAction, (state, action) => {
     const cel = { ...state.celements[action.payload.celId] };
 
+    // Should centered align for non main axis,
+    // as not all aligns supported for it
+    if (action.payload.layoutAlign.flexDirection == FlexDirection.Column) {
+      action.payload.layoutAlign.horizontal = LayoutAlign.AlignCenter;
+    } else if (action.payload.layoutAlign.flexDirection == FlexDirection.Row) {
+      action.payload.layoutAlign.vertical = LayoutAlign.AlignCenter;
+    }
+
     cel.layoutAlign.vertical =
       action.payload.layoutAlign.vertical ?? cel.layoutAlign.vertical;
     cel.layoutAlign.horizontal =
@@ -89,9 +98,10 @@ export const celementReducerMapBuilder = (
       transformation: new CElementTransformation(
         undefined,
         undefined,
-        undefined,        
         undefined,
-         action.payload.layoutAlign),
+        undefined,
+        action.payload.layoutAlign
+      ),
     };
   });
 };

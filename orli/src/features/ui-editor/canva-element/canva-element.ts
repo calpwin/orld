@@ -21,6 +21,7 @@ import { FlexboxAdapter } from "../../../services/flexbox-adapter";
 import { CElementLayoutAlign, LayoutDisplayMode } from "../celement/celement-layout";
 import { CanvaElementDimension } from "./canva-element-dimension";
 import { Ioc } from "../../../base/config.inversify";
+import { CElementMargins } from "../celement/celement-margin";
 
 export class CanvaElement {
   private readonly _resizers = new CanvaElementResizers();
@@ -36,6 +37,7 @@ export class CanvaElement {
   private _rectY!: number;
   private _rectWidth!: CanvaElementDimension;
   private _rectHeight!: CanvaElementDimension;  
+  private readonly _margins = new CElementMargins();
 
   private _isSelected = false;
 
@@ -415,6 +417,7 @@ export class CanvaElementPosition {
 export class CanvaElementBound {
   constructor(
     public width: CanvaElementDimension,
-    public height: CanvaElementDimension
+    public height: CanvaElementDimension,
+    private margins?: CElementMargins
   ) {}
 }
