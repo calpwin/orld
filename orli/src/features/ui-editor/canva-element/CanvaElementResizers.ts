@@ -20,8 +20,8 @@ export class CanvaElementResizers extends Map<
     parentCaelPosition: CanvaElementPosition,
     parentCaelBound: CanvaElementBound) {
     Array.from(this.values()).forEach((resizer) => {
-      let x = parentCaelPosition.x;
-      let y = parentCaelPosition.y;
+      let x = parentCaelPosition.x + parentCaelBound.margins.left.value;
+      let y = parentCaelPosition.y + parentCaelBound.margins.top.value;
 
       switch (resizer.direction) {
         case ResizerDirection.Left:

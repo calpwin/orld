@@ -44,7 +44,12 @@ export class CanvaElement {
   private _rectY!: number;
   private _rectWidth!: CanvaElementDimension;
   private _rectHeight!: CanvaElementDimension;
-  private readonly _margins = new CElementMargins();
+  private readonly _margins = new CElementMargins(
+    new CElementMargin(5, CElementMarginDirection.Top),
+    new CElementMargin(15, CElementMarginDirection.Right),
+    new CElementMargin(10, CElementMarginDirection.Bottom),
+    new CElementMargin(0, CElementMarginDirection.Left)
+  );
 
   private _isSelected = false;
 
@@ -55,7 +60,11 @@ export class CanvaElement {
   private readonly _children = new Map<string, CanvaElement>();
 
   get bound() {
-    return new CanvaElementBound(this._rectWidth, this._rectHeight);
+    return new CanvaElementBound(
+      this._rectWidth,
+      this._rectHeight,
+      this._margins
+    );
   }
 
   get position() {
@@ -170,7 +179,8 @@ export class CanvaElement {
           this._rectX,
           this._rectY,
           this._rectWidth,
-          this._rectHeight
+          this._rectHeight,
+          this._margins
         ),
       })
     );
@@ -196,7 +206,8 @@ export class CanvaElement {
     x?: number,
     y?: number,
     width?: CElementDimension,
-    height?: CElementDimension
+    height?: CElementDimension,
+    margings?: CElementMargin[]
   ) {
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
     const widthInPx = width
@@ -234,19 +245,9 @@ export class CanvaElement {
         )
       : this._rectHeight;
 
+    margings?.forEach((margin) => this._margins.set(margin));
+
     this.applyTransformation(changedAxis);
-
-    // this.redraw();
-    // this._resizers.updateResizeresPosition({ ...this.bound, ...this.position });
-
-    // // disable movaeble for children if parent container not in Absolute display mode
-    // this._children.forEach(
-    //   (x) =>
-    //     (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
-    // );
-
-    // flexboxAdapter.syncChildrenPosition(this, layoutAlign);
-    // flexboxAdapter.syncChildrenBound(this, changedAxis);
   }
 
   /* 
@@ -261,8 +262,8 @@ export class CanvaElement {
     }
 
     this._rectangle.drawRect(
-      this._rectX,
-      this._rectY,
+      this._rectX + this._margins.left.value,
+      this._rectY + this._margins.top.value,
       this._rectWidth.valueInPx,
       this._rectHeight.valueInPx
     );
@@ -272,9 +273,54 @@ export class CanvaElement {
       this._rectWidth.valueInPx + 20,
       this._rectHeight.valueInPx + 20
     );
+
+    this._rectangle.lineStyle();
+
     this._rectangle.endFill();
 
+    this.drawMargins();
+
     this._resizers.updateResizeresPosition(this.position, this.bound);
+  }
+
+  private drawMargins() {
+    this._rectangle.beginFill(0xfd5d71);
+
+    let x = this._rectX;
+
+    if (this._margins.top.isSet)
+      this._rectangle.drawRect(
+        this._rectX,
+        this._rectY,
+        this.bound.totalWidthInPx,
+        this._margins.top.value
+      );
+
+    if (this._margins.right.isSet)
+      this._rectangle.drawRect(
+        this._rectX + this._margins.left.value + this._rectWidth.valueInPx,
+        this._rectY,
+        this._margins.right.value,
+        this.bound.totalHeihgtInPx
+      );
+
+    if (this._margins.bottom.isSet)
+      this._rectangle.drawRect(
+        this._rectX,
+        this._rectY + this._margins.top.value + this._rectHeight.valueInPx,
+        this.bound.totalWidthInPx,
+        this._margins.bottom.value
+      );
+
+    if (this._margins.left.isSet)
+      this._rectangle.drawRect(
+        this._rectX,
+        this._rectY,
+        this._margins.left.value,
+        this.bound.totalHeihgtInPx
+      );
+
+    this._rectangle.endFill();
   }
 
   private bindEvents() {
@@ -322,7 +368,7 @@ export class CanvaElement {
           CElementDimensionAxis.Width)
     ) {
       const updatedWidthInPx =
-        (this.parent.bound.width.valueInPx * this.bound.width.value) / 100;
+        (this.parent.bound.totalWidthInPx * this.bound.width.value) / 100;
       if (updatedWidthInPx !== this._rectWidth.valueInPx) {
         this._rectWidth.valueInPx = updatedWidthInPx;
         needRedraw = true;
@@ -338,7 +384,7 @@ export class CanvaElement {
           CElementDimensionAxis.Height)
     ) {
       const updatedHeightInPx =
-        (this.parent.bound.height.valueInPx * this.bound.height.value) / 100;
+        (this.parent.bound.totalHeihgtInPx * this.bound.height.value) / 100;
       if (updatedHeightInPx !== this._rectHeight.valueInPx) {
         this._rectHeight.valueInPx = updatedHeightInPx;
         needRedraw = true;

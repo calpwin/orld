@@ -126,7 +126,7 @@ export class FlexboxAdapter {
       child.setTransformation(previousShift, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
-        previousShift += child.bound.width.valueInPx;
+        previousShift += child.bound.totalWidthInPx;
       }
     }
   }
@@ -140,12 +140,12 @@ export class FlexboxAdapter {
       throw Error("Space between for non main axis is not suported");
 
     const childrenTotalWidth = children
-      .map((x) => x.bound.width.valueInPx)
+      .map((x) => x.bound.totalWidthInPx)
       .reduce((a, b) => a + b, 0);
     const spaceCount = children.length - 1;
     const margin =
       spaceCount > 0
-        ? (parent.bound.width.valueInPx - childrenTotalWidth) / spaceCount
+        ? (parent.bound.totalWidthInPx - childrenTotalWidth) / spaceCount
         : 0;
 
     let previousShift = parent.position.x;
@@ -154,7 +154,7 @@ export class FlexboxAdapter {
 
       child.setTransformation(previousShift, child.position.y);
 
-      previousShift += margin + child.bound.width.valueInPx;
+      previousShift += margin + child.bound.totalWidthInPx;
     }
   }
 
@@ -164,9 +164,9 @@ export class FlexboxAdapter {
     flexDirection: FlexDirection
   ) {
     const childrenTotalWidth = children
-      .map((x) => x.bound.width.valueInPx)
+      .map((x) => x.bound.totalWidthInPx)
       .reduce((a, b) => a + b, 0);
-    const margin = (parent.bound.width.valueInPx - childrenTotalWidth) / 2;
+    const margin = (parent.bound.totalWidthInPx - childrenTotalWidth) / 2;
 
     let currentX = margin;
     for (let index = 0; index < children.length; index++) {
@@ -175,13 +175,13 @@ export class FlexboxAdapter {
       currentX =
         flexDirection === FlexDirection.Row
           ? currentX
-          : (parent.bound.width.valueInPx - child.bound.width.valueInPx) / 2;
+          : (parent.bound.totalWidthInPx - child.bound.totalWidthInPx) / 2;
 
       child.graphics.position.set(0, 0);
       child.setTransformation(parent.position.x + currentX, child.position.y);
 
       if (flexDirection === FlexDirection.Row) {
-        currentX += child.bound.width.valueInPx;
+        currentX += child.bound.totalWidthInPx;
       }
     }
   }
@@ -195,12 +195,12 @@ export class FlexboxAdapter {
       throw Error("Space around for non main axis is not suported");
 
     const childrenTotalWidth = children
-      .map((x) => x.bound.width.valueInPx)
+      .map((x) => x.bound.totalWidthInPx)
       .reduce((a, b) => a + b, 0);
     const spaceCount = children.length + 1;
     const margin =
       spaceCount > 0
-        ? (parent.bound.width.valueInPx - childrenTotalWidth) / spaceCount
+        ? (parent.bound.totalWidthInPx - childrenTotalWidth) / spaceCount
         : 0;
 
     let previousShift = parent.position.x + margin;
@@ -209,7 +209,7 @@ export class FlexboxAdapter {
 
       child.setTransformation(previousShift, child.position.y);
 
-      previousShift += margin + child.bound.width.valueInPx;
+      previousShift += margin + child.bound.totalWidthInPx;
     }
   }
 
@@ -218,18 +218,18 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.x + parent.bound.width.valueInPx;
+    let previousShift = parent.position.x + parent.bound.totalWidthInPx;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
       child.setTransformation(
-        previousShift - child.bound.width.valueInPx,
+        previousShift - child.bound.totalWidthInPx,
         child.position.y
       );
 
       if (flexDirection === FlexDirection.Row) {
-        previousShift -= child.bound.width.valueInPx;
+        previousShift -= child.bound.totalWidthInPx;
       }
     }
   }
@@ -247,7 +247,7 @@ export class FlexboxAdapter {
       child.setTransformation(child.position.x, previousShift);
 
       if (flexDirection === FlexDirection.Column) {
-        previousShift += child.bound.height.valueInPx;
+        previousShift += child.bound.totalHeihgtInPx;
       }
     }
   }
@@ -261,12 +261,12 @@ export class FlexboxAdapter {
       throw Error("Space between for non main axis is not suported");
 
     const childrenTotalHeight = children
-      .map((x) => x.bound.height.valueInPx)
+      .map((x) => x.bound.totalHeihgtInPx)
       .reduce((a, b) => a + b, 0);
     const spaceCount = children.length - 1;
     const margin =
       spaceCount > 0
-        ? (parent.bound.height.valueInPx - childrenTotalHeight) / spaceCount
+        ? (parent.bound.totalHeihgtInPx - childrenTotalHeight) / spaceCount
         : 0;
 
     let previousShift = parent.position.y;
@@ -275,7 +275,7 @@ export class FlexboxAdapter {
 
       child.setTransformation(child.position.x, previousShift);
 
-      previousShift += margin + child.bound.height.valueInPx;
+      previousShift += margin + child.bound.totalHeihgtInPx;
     }
   }
 
@@ -285,9 +285,9 @@ export class FlexboxAdapter {
     flexDirection: FlexDirection
   ) {
     const childrenTotalHeight = children
-      .map((x) => x.bound.height.valueInPx)
+      .map((x) => x.bound.totalHeihgtInPx)
       .reduce((a, b) => a + b, 0);
-    const margin = (parent.bound.height.valueInPx - childrenTotalHeight) / 2;
+    const margin = (parent.bound.totalHeihgtInPx - childrenTotalHeight) / 2;
 
     let currentY = margin;
     for (let index = 0; index < children.length; index++) {
@@ -296,13 +296,13 @@ export class FlexboxAdapter {
       currentY =
         flexDirection === FlexDirection.Column
           ? currentY
-          : (parent.bound.height.valueInPx - child.bound.height.valueInPx) / 2;
+          : (parent.bound.totalHeihgtInPx - child.bound.totalHeihgtInPx) / 2;
 
       child.graphics.position.set(0, 0);
       child.setTransformation(child.position.x, parent.position.y + currentY);
 
       if (flexDirection === FlexDirection.Column) {
-        currentY += child.bound.height.valueInPx;
+        currentY += child.bound.totalHeihgtInPx;
       }
     }
   }
@@ -316,12 +316,12 @@ export class FlexboxAdapter {
       throw Error("Space around for non main axis is not suported");
 
     const childrenTotalHeight = children
-      .map((x) => x.bound.height.valueInPx)
+      .map((x) => x.bound.totalHeihgtInPx)
       .reduce((a, b) => a + b, 0);
     const spaceCount = children.length + 1;
     const margin =
       spaceCount > 0
-        ? (parent.bound.height.valueInPx - childrenTotalHeight) / spaceCount
+        ? (parent.bound.totalHeihgtInPx - childrenTotalHeight) / spaceCount
         : 0;
 
     let previousShift = parent.position.y + margin;
@@ -330,7 +330,7 @@ export class FlexboxAdapter {
 
       child.setTransformation(child.position.x, previousShift);
 
-      previousShift += margin + child.bound.height.valueInPx;
+      previousShift += margin + child.bound.totalHeihgtInPx;
     }
   }
 
@@ -339,18 +339,18 @@ export class FlexboxAdapter {
     children: CanvaElement[],
     flexDirection: FlexDirection
   ) {
-    let previousShift = parent.position.y + parent.bound.height.valueInPx;
+    let previousShift = parent.position.y + parent.bound.totalHeihgtInPx;
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
       child.setTransformation(
         child.position.x,
-        previousShift - child.bound.height.valueInPx
+        previousShift - child.bound.totalHeihgtInPx
       );
 
       if (flexDirection === FlexDirection.Column) {
-        previousShift -= child.bound.height.valueInPx;
+        previousShift -= child.bound.totalHeihgtInPx;
       }
     }
   }
@@ -392,10 +392,10 @@ export class FlexboxAdapter {
     const parentDimValPx =
       axis === CElementDimensionAxis.Width
         ? parent
-          ? parent.bound.width.valueInPx
+          ? parent.bound.totalWidthInPx
           : this._editorService.app.stage.width
         : parent
-        ? parent.bound.height.valueInPx
+        ? parent.bound.totalHeihgtInPx
         : this._editorService.app.stage.height;
 
     if (dimension.measurement === CElementDimensionMeasurement.Percent) {
