@@ -17,25 +17,26 @@ export class CanvaElementResizers extends Map<
   }
 
   public updateResizeresPosition(
-    parentCaelPosAndBound: CanvaElementPosition & CanvaElementBound) {
+    parentCaelPosition: CanvaElementPosition,
+    parentCaelBound: CanvaElementBound) {
     Array.from(this.values()).forEach((resizer) => {
-      let x = parentCaelPosAndBound.x;
-      let y = parentCaelPosAndBound.y;
+      let x = parentCaelPosition.x;
+      let y = parentCaelPosition.y;
 
       switch (resizer.direction) {
         case ResizerDirection.Left:
-          y += parentCaelPosAndBound.height.valueInPx / 2;
+          y += parentCaelBound.height.valueInPx / 2;
           break;
         case ResizerDirection.Top:
-          x += parentCaelPosAndBound.width.valueInPx / 2;
+          x += parentCaelBound.width.valueInPx / 2;
           break;
         case ResizerDirection.Right:
-          x += parentCaelPosAndBound.width.valueInPx;
-          y += parentCaelPosAndBound.height.valueInPx / 2;
+          x += parentCaelBound.width.valueInPx;
+          y += parentCaelBound.height.valueInPx / 2;
           break;
         case ResizerDirection.Bottom:
-          x += parentCaelPosAndBound.width.valueInPx / 2;
-          y += parentCaelPosAndBound.height.valueInPx;
+          x += parentCaelBound.width.valueInPx / 2;
+          y += parentCaelBound.height.valueInPx;
           break;
       }
 

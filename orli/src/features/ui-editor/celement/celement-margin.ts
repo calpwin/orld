@@ -6,7 +6,7 @@ export enum CElementMarginDirection {
 }
 
 export class CElementMargin {
-    constructor(public value: number, direction: CElementMarginDirection) {
+    constructor(public value: number, public direction: CElementMarginDirection) {
     }
 }
 
@@ -28,6 +28,10 @@ export class CElementMargins {
 
     get left() {
         return this._margins.get(CElementMarginDirection.Left)!;
+    }
+
+    set(margin: CElementMargin) {
+        this._margins.set(margin.direction, margin);
     }
 
     constructor() {

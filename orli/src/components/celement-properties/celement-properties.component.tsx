@@ -348,18 +348,18 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         this.setState({
           ...this.state,
           celPosition: { x: newVal!.x, y: newVal!.y },
-          celBound: {
-            width: new CanvaElementDimension(
+          celBound: new CanvaElementBound(
+            new CanvaElementDimension(
               newVal!.width.value,
               undefined,
               newVal!.width.measurement
             ),
-            height: new CanvaElementDimension(
+            new CanvaElementDimension(
               newVal!.height.value,
               undefined,
               newVal!.height.measurement
-            ),
-          },
+            )
+          ),
           celLayoutAligin: {
             vertical: newVal!.layoutAlign.vertical,
             horizontal: newVal!.layoutAlign.horizontal,
@@ -382,18 +382,18 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           celStatePart = {
             ...celStatePart,
             celPosition: { x: cel.x, y: cel.y },
-            celBound: {
-              width: new CanvaElementDimension(
+            celBound: new CanvaElementBound(
+              new CanvaElementDimension(
                 cel.width.value,
                 undefined,
                 cel.width.measurement
               ),
-              height: new CanvaElementDimension(
+              new CanvaElementDimension(
                 cel.height.value,
                 undefined,
                 cel.height.measurement
-              ),
-            },
+              )
+            ),
             celLayoutAligin: {
               vertical: cel.layoutAlign.vertical,
               horizontal: cel.layoutAlign.horizontal,
@@ -482,10 +482,16 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     heightVal?: number
   ) => {
     const width = widthVal
-      ? new CElementDimension(widthVal, this.state.celBound.width.measurement)
+      ? new CElementDimension(
+          widthVal,
+          this.state.celBound.width.measurement
+        )
       : undefined;
     const height = heightVal
-      ? new CElementDimension(heightVal, this.state.celBound.height.measurement)
+      ? new CElementDimension(
+          heightVal,
+          this.state.celBound.height.measurement
+        )
       : undefined;
 
     store.dispatch(

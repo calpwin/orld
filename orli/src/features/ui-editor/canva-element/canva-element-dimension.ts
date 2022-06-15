@@ -12,6 +12,9 @@ export class CanvaElementDimension extends CElementDimension {
     return this._valueInPx;
   }
 
+  /** If tou update valueInPx with percent measurment you should update value in percent by yourself 
+   * with help of @see syncDimensionInPxWithParentDimensionRef
+   */
   set valueInPx(value: number) {
     this._valueInPx = value;
 
