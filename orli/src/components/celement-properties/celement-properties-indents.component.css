@@ -1,0 +1,27 @@
+#properties-indent-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#properties-indent-wrapper .indents {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#properties-indent-wrapper .indents .prefix {
+    margin-top: 3px;
+}
+#properties-indent-wrapper .indents .inputs {
+    display: flex;    
+}
+#properties-indent-wrapper .indents .inputs .input {
+    width: 60px;
+}
+
+#properties-indent-wrapper .indent-margins .indent-paddings {
+    margin-top: 10px;;
+}

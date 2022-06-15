@@ -5,7 +5,7 @@ export enum CElementMarginDirection {
   Left = 4,
 }
 
-export class CElementMargin {
+export class CElementIndent {
   constructor(
     public value: number,
     public direction: CElementMarginDirection
@@ -17,40 +17,40 @@ export class CElementMargin {
 }
 
 /** All direction CElement margins */
-export class CElementMargins {
-  public top!: CElementMargin;
-  public right!: CElementMargin;
-  public bottom!: CElementMargin;
-  public left!: CElementMargin;
+export class CElementIndents {
+  public top!: CElementIndent;
+  public right!: CElementIndent;
+  public bottom!: CElementIndent;
+  public left!: CElementIndent;
 
   constructor();
-  constructor(top: CElementMargin);
-  constructor(top: CElementMargin, right: CElementMargin);
+  constructor(top: CElementIndent);
+  constructor(top: CElementIndent, right: CElementIndent);
   constructor(
-    top: CElementMargin,
-    right: CElementMargin,
-    bottom: CElementMargin
+    top: CElementIndent,
+    right: CElementIndent,
+    bottom: CElementIndent
   );
   constructor(
-    top: CElementMargin,
-    right: CElementMargin,
-    bottom: CElementMargin,
-    left: CElementMargin
+    top: CElementIndent,
+    right: CElementIndent,
+    bottom: CElementIndent,
+    left: CElementIndent
   );
   constructor(
-    top?: CElementMargin,
-    right?: CElementMargin,
-    bottom?: CElementMargin,
-    left?: CElementMargin
+    top?: CElementIndent,
+    right?: CElementIndent,
+    bottom?: CElementIndent,
+    left?: CElementIndent
   ) {
-    this.top = top ?? new CElementMargin(0, CElementMarginDirection.Top);
-    this.right = right ?? new CElementMargin(0, CElementMarginDirection.Right);
+    this.top = top ?? new CElementIndent(0, CElementMarginDirection.Top);
+    this.right = right ?? new CElementIndent(0, CElementMarginDirection.Right);
     this.bottom =
-      bottom ?? new CElementMargin(0, CElementMarginDirection.Bottom);
-    this.left = left ?? new CElementMargin(0, CElementMarginDirection.Left);
+      bottom ?? new CElementIndent(0, CElementMarginDirection.Bottom);
+    this.left = left ?? new CElementIndent(0, CElementMarginDirection.Left);
   }
 
-  set(margin: CElementMargin) {
+  set(margin: CElementIndent) {
     switch (margin.direction) {
       case CElementMarginDirection.Top:
         this.top = margin;

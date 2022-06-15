@@ -46,12 +46,17 @@ import {
   CElementTransformation,
 } from "../../features/ui-editor/celement/celement";
 import { CanvaElementDimension } from "../../features/ui-editor/canva-element/canva-element-dimension";
+import { CElementIndents } from "../../features/ui-editor/celement/celement-margin";
+import { CElementPropertiesIndentsComponent } from "./celement-properties-indents.component";
 
 class State {
+  currentCaelId: string | undefined = undefined;
   celPosition = new CanvaElementPosition(0, 0);
   celBound = new CanvaElementBound(
     new CanvaElementDimension(0),
-    new CanvaElementDimension(0)
+    new CanvaElementDimension(0),
+    new CElementIndents(),
+    new CElementIndents()
   );
   celLayoutAligin = new CElementLayoutAlign();
   celSelected = false;
@@ -328,6 +333,16 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
       <div id="properties-wrapper">
         {this.state.celSelected ? celCoord : undefined}
 
+        {this.state.celSelected ? (
+          <CElementPropertiesIndentsComponent
+            key={this.state.currentCaelId}
+            indents={{
+              margins: this.state.celBound.margins,
+              paddings: this.state.celBound.paddings,
+            }}
+          />
+        ) : undefined}
+
         {this.state.celSelected ? celAlign : undefined}
       </div>
     );
@@ -347,6 +362,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
       wLastCElementChanged((newVal, oldVal) => {
         this.setState({
           ...this.state,
+          currentCaelId: newVal!.id,
           celPosition: { x: newVal!.x, y: newVal!.y },
           celBound: new CanvaElementBound(
             new CanvaElementDimension(
@@ -358,7 +374,9 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
               newVal!.height.value,
               undefined,
               newVal!.height.measurement
-            )
+            ),
+            newVal!.margins,
+            newVal!.paddings
           ),
           celLayoutAligin: {
             vertical: newVal!.layoutAlign.vertical,
@@ -381,6 +399,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           const cel = store.getState().editor.celements[newId];
           celStatePart = {
             ...celStatePart,
+            currentCaelId: cel.id,
             celPosition: { x: cel.x, y: cel.y },
             celBound: new CanvaElementBound(
               new CanvaElementDimension(
@@ -392,7 +411,9 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
                 cel.height.value,
                 undefined,
                 cel.height.measurement
-              )
+              ),
+              cel.margins,
+              cel.paddings
             ),
             celLayoutAligin: {
               vertical: cel.layoutAlign.vertical,
@@ -482,16 +503,10 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     heightVal?: number
   ) => {
     const width = widthVal
-      ? new CElementDimension(
-          widthVal,
-          this.state.celBound.width.measurement
-        )
+      ? new CElementDimension(widthVal, this.state.celBound.width.measurement)
       : undefined;
     const height = heightVal
-      ? new CElementDimension(
-          heightVal,
-          this.state.celBound.height.measurement
-        )
+      ? new CElementDimension(heightVal, this.state.celBound.height.measurement)
       : undefined;
 
     store.dispatch(

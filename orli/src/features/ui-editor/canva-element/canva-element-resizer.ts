@@ -99,12 +99,12 @@ export class CanvaElementResizer {
         if (!this._moving) return;
 
         const parentCaelBound = new CanvaElementBound(
-          this._cael.bound.width,
-          this._cael.bound.height
+          this._cael.outerBound.width,
+          this._cael.outerBound.height
         );
         const parentCaelPostion = new CanvaElementPosition(
-          this._cael.position.x,
-          this._cael.position.y
+          this._cael.outerPosition.x,
+          this._cael.outerPosition.y
         );
 
         this._offsetX = newVal.x - this._startMoveX;
@@ -117,7 +117,7 @@ export class CanvaElementResizer {
             parentCaelBound.width.valueInPx -= this._offsetX;
             CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
               parentCaelBound.width,
-              this._cael.parent?.bound.width ??
+              this._cael.parent?.outerBound.width ??
                 new CanvaElementDimension(this._editorService.app.stage.width)
             );
 
@@ -129,7 +129,7 @@ export class CanvaElementResizer {
             parentCaelBound.height.valueInPx -= this._offsetY;
             CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
               parentCaelBound.height,
-              this._cael.parent?.bound.height ??
+              this._cael.parent?.outerBound.height ??
                 new CanvaElementDimension(this._editorService.app.stage.height)
             );
 
@@ -139,7 +139,7 @@ export class CanvaElementResizer {
             parentCaelBound.width.valueInPx += this._offsetX;
             CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
               parentCaelBound.width,
-              this._cael.parent?.bound.width ??
+              this._cael.parent?.outerBound.width ??
                 new CanvaElementDimension(this._editorService.app.stage.width)
             );
 
@@ -149,7 +149,7 @@ export class CanvaElementResizer {
             parentCaelBound.height.valueInPx += this._offsetY;
             CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
               parentCaelBound.height,
-              this._cael.parent?.bound.height ??
+              this._cael.parent?.outerBound.height ??
                 new CanvaElementDimension(this._editorService.app.stage.height)
             );
 

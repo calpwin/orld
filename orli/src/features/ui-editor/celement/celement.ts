@@ -2,7 +2,7 @@ import {
   CElementLayoutAlign,
   CElementLayoutAlignUpdate,
 } from "./celement-layout";
-import { CElementMargin, CElementMargins } from "./celement-margin";
+import { CElementIndent, CElementIndents } from "./celement-margin";
 
 export class CElement {
   public layoutAlign = new CElementLayoutAlign();
@@ -13,7 +13,8 @@ export class CElement {
     public y: number,
     public width: CElementDimension,
     public height: CElementDimension,
-    public margins: CElementMargins,
+    public margins: CElementIndents,
+    public paddings: CElementIndents,
   ) {}
 }
 
@@ -23,12 +24,13 @@ export class CElementTransformation {
     public y?: number,
     public width?: CElementDimension,
     public height?: CElementDimension,
-    public margins?: CElementMargin[],
+    public margins?: CElementIndent[],
+    public paddings?: CElementIndent[],
     public align?: CElementLayoutAlignUpdate
   ) {}
 
   public isEmpty = () =>
-    !this.x && !this.y && !this.width && !this.height && !this.align && !this.margins;
+    !this.x && !this.y && !this.width && !this.height && !this.align && !this.margins && !this.paddings;
 }
 
 export enum CElementDimensionMeasurement {

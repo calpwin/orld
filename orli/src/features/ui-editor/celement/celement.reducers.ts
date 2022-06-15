@@ -56,6 +56,7 @@ export const celementReducerMapBuilder = (
     cel.width = action.payload.transformation.width ?? cel.width;
     cel.height = action.payload.transformation.height ?? cel.height;
     action.payload.transformation.margins?.forEach(margin => cel.margins.set(margin));
+    action.payload.transformation.paddings?.forEach(padding => cel.paddings.set(padding));
 
     const newHash = HashHelpers.overrideOne(state.celements, cel);
     state.celements = newHash;
@@ -67,7 +68,8 @@ export const celementReducerMapBuilder = (
         action.payload.transformation.y,
         action.payload.transformation.width,
         action.payload.transformation.height,
-        action.payload.transformation.margins
+        action.payload.transformation.margins,
+        action.payload.transformation.paddings
       ),
     };
   });
@@ -98,6 +100,7 @@ export const celementReducerMapBuilder = (
     state.lastCElementTransformed = {
       celId: cel.id,
       transformation: new CElementTransformation(
+        undefined,
         undefined,
         undefined,
         undefined,
