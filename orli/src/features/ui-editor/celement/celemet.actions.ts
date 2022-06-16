@@ -1,24 +1,36 @@
 import { createAction } from "@reduxjs/toolkit";
-import { CElement, CElementTransformation } from "./celement";
-import { CElementLayoutAlignUpdate, FlexDirection, LayoutAlign, LayoutDisplayMode } from "./celement-layout";
+import { CElement, CElementToCreate, CElementTransformation } from "./celement";
+import { CElementLayoutAlignUpdate } from "./celement-layout";
 
-export const celementAddAction = createAction<{ cel: CElement }>(
-  "celement/add"
+export const celementCreateAction = createAction<{ cel: CElementToCreate, toParentCelId?: string }>(
+  "celement/create"
 );
+
+export const celementAddedAction = createAction<{ cel: CElement }>(
+  "celement/added"
+);
+
+export const celementRemoveAction = createAction<{ celId: string }>(
+  "celement/remove"
+);
+
 export const celementSelectAction = createAction<{ celId: string | undefined }>(
   "celement/select"
 );
 
+/** Change position (x,y) of cel */
 export const celementChangePositionAction = createAction<{
   celId: string;
   position: { x: number; y: number };
 }>("celement/changePosition");
 
+/** Set cel trasformation (width, height, margins, paddings, align) */
 export const celementTransformAction = createAction<{
   celId: string;
   transformation: CElementTransformation;
 }>("celement/trasform");
 
+/** Set cel layout align */
 export const celementSetLayoutAlignAction = createAction<{
   celId: string;
   layoutAlign: CElementLayoutAlignUpdate;

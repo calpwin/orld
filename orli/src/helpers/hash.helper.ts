@@ -15,6 +15,11 @@ export class HashHelpers {
     return hash;
   }
 
+  public static removeOne(hash: CElementHash, celId: string) {
+    const cels = HashHelpers.toEntries(hash).filter((x) => x[1].id != celId);
+    return HashHelpers.create(cels);
+  }
+
   public static deepCopy(hash: CElementHash) {
     const entries = this.toEntries(hash);
     const newHash = this.create(entries);

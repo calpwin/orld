@@ -1,6 +1,7 @@
 import "./celement-properties.component.css";
 
 import {
+  Button,
   Input,
   InputAdornment,
   ToggleButton,
@@ -33,6 +34,8 @@ import {
 } from "../../features/ui-editor/celement/celement.selectors";
 import store from "../../rx/store";
 import {
+  celementRemoveAction,
+  celementSelectAction,
   celementSetLayoutAlignAction,
   celementTransformAction,
 } from "../../features/ui-editor/celement/celemet.actions";
@@ -329,6 +332,18 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
       </div>
     );
 
+    const removeCael = (
+      <div id="remove-cael-wrapper">
+        <Button
+          variant="contained"
+          className="btn btn-remove"
+          onClick={this.onCElementRemove}
+        >
+          Remove
+        </Button>
+      </div>
+    );
+
     return (
       <div id="properties-wrapper">
         {this.state.celSelected ? celCoord : undefined}
@@ -344,6 +359,8 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         ) : undefined}
 
         {this.state.celSelected ? celAlign : undefined}
+
+        {this.state.celSelected ? removeCael : undefined}
       </div>
     );
   }
@@ -552,4 +569,10 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
       })
     );
   };
+
+  private onCElementRemove = () => {
+    const celId = this.state.currentCaelId!;
+    store.dispatch(celementRemoveAction({ celId }));
+    store.dispatch(celementSelectAction({ celId: undefined }));
+  }
 }

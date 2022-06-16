@@ -4,18 +4,37 @@ import {
 } from "./celement-layout";
 import { CElementIndent, CElementIndents } from "./celement-margin";
 
-export class CElement {
+export class CElementToCreate {
   public layoutAlign = new CElementLayoutAlign();
 
+  public margins!: CElementIndents;
+  public paddings!: CElementIndents;
+
   constructor(
-    public id: string,
     public x: number,
     public y: number,
     public width: CElementDimension,
     public height: CElementDimension,
-    public margins: CElementIndents,
-    public paddings: CElementIndents,
-  ) {}
+    margins?: CElementIndents,
+    paddings?: CElementIndents
+  ) {
+    this.margins = margins ?? new CElementIndents();
+    this.paddings = paddings ?? new CElementIndents();
+  }
+}
+
+export class CElement extends CElementToCreate {
+  constructor(
+    public id: string,
+    x: number,
+    y: number,
+    width: CElementDimension,
+    height: CElementDimension,
+    margins: CElementIndents,
+    paddings: CElementIndents
+  ) {
+    super(x, y, width, height, margins, paddings);
+  }
 }
 
 export class CElementTransformation {
@@ -30,7 +49,13 @@ export class CElementTransformation {
   ) {}
 
   public isEmpty = () =>
-    !this.x && !this.y && !this.width && !this.height && !this.align && !this.margins && !this.paddings;
+    !this.x &&
+    !this.y &&
+    !this.width &&
+    !this.height &&
+    !this.align &&
+    !this.margins &&
+    !this.paddings;
 }
 
 export enum CElementDimensionMeasurement {
@@ -43,10 +68,9 @@ export enum CElementDimensionAxis {
   Height = 2 << 2,
 }
 
-export class CElementDimension {  
+export class CElementDimension {
   constructor(
     public value: number,
     public measurement: CElementDimensionMeasurement = CElementDimensionMeasurement.Px
-  ) {    
-  }
+  ) {}
 }

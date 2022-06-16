@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import { CElementService } from "../services/celement.service";
+import { CanvaElementService } from "../services/canva-element.service";
 import * as PIXI from "pixi.js";
 import { Ioc } from "../base/config.inversify";
 
@@ -9,11 +9,14 @@ import { CElementAddNewComponent } from "./celement-add-new/celement-add-new.com
 import { currentSelectedCelementSelector } from "../features/ui-editor/celement/celement.selectors";
 import store from "../rx/store";
 import { watch } from "../rx/watch";
-import { CElementDimension } from "../features/ui-editor/celement/celement";
+import {
+  CElementDimension, CElementToCreate,
+} from "../features/ui-editor/celement/celement";
 import { EditorService } from "../services/editor.service";
+import { celementCreateAction } from "../features/ui-editor/celement/celemet.actions";
 
 export class App extends React.Component<{}, {}> {
-  private readonly _cElementService: CElementService;
+  private readonly _cElementService: CanvaElementService;
   private readonly _editorService!: EditorService;
 
   private _isEditorCreated = false;
@@ -22,8 +25,9 @@ export class App extends React.Component<{}, {}> {
   constructor(props: any) {
     super(props);
 
-    const iocContainer = Ioc.Conatiner;    
-    this._cElementService = iocContainer.get<CElementService>(CElementService);
+    const iocContainer = Ioc.Conatiner;
+    this._cElementService =
+      iocContainer.get<CanvaElementService>(CanvaElementService);
     this._editorService = iocContainer.get<EditorService>(EditorService);
   }
 
@@ -68,7 +72,7 @@ export class App extends React.Component<{}, {}> {
     // can then insert into the DOM
     rootEl.appendChild(app.view);
 
-    const container = this._cElementService.createCElement(
+    const container = this._cElementService.createCael(
       0,
       0,
       new CElementDimension(400),
@@ -76,27 +80,29 @@ export class App extends React.Component<{}, {}> {
       0x99aaaa
     );
 
-    const cel1 = this._cElementService.createCElement(
-      0,
-      20,
-      new CElementDimension(60),
-      new CElementDimension(30),
-      0x66ccff
+    store.dispatch(
+      celementCreateAction({
+        cel: new CElementToCreate(
+          0,
+          20,
+          new CElementDimension(60),
+          new CElementDimension(30)
+        ),
+        toParentCelId: container.id
+      }),      
     );
-    cel1.graphics.x = container.graphics.x;
-    container.addChild(cel1);
 
-    const cel2 = this._cElementService.createCElement(
-      0,
-      50,
-      new CElementDimension(60),
-      new CElementDimension(30),
-      0x66ccff
+    store.dispatch(
+      celementCreateAction({
+        cel: new CElementToCreate(
+          0,
+          50,
+          new CElementDimension(60),
+          new CElementDimension(30)
+        ),
+        toParentCelId: container.id
+      })
     );
-    cel2.graphics.x = container.graphics.x;
-    container.addChild(cel2);
-
-    app.stage.addChild(container.graphics);
 
     this._isEditorCreated = true;
   }
@@ -110,13 +116,13 @@ export class App extends React.Component<{}, {}> {
     store.subscribe(
       wSelectedCel((newId, oldId) => {
         if (oldId) {
-          const cel = this._cElementService.getCElement(oldId)!;
+          const cel = this._cElementService.getCael(oldId)!;
           cel.isSelected = false;
         }
 
         if (!newId) return;
 
-        const cel = this._cElementService.getCElement(newId)!;
+        const cel = this._cElementService.getCael(newId)!;
         cel.isSelected = true;
       })
     );

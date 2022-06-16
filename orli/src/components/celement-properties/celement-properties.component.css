@@ -57,3 +57,17 @@
   #properties-wrapper .cel-layout-align .toggle:first-child {
     margin-bottom: 10px;
   }
+
+
+  #remove-cael-wrapper {
+    margin-top: 20px;
+    padding: 10px;
+    position: relative;
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  #remove-cael-wrapper .btn-remove {
+    background-color: #e74c3c;
+  }

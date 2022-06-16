@@ -1,11 +1,13 @@
 import { ActionReducerMapBuilder } from "@reduxjs/toolkit";
 import { HashHelpers } from "../../../helpers/hash.helper";
-import { CElementHash, editorInitialState } from "../editor.state";
-import { CElement, CElementTransformation } from "./celement";
+import { editorInitialState } from "../editor.state";
+import { CElementTransformation } from "./celement";
 import { FlexDirection, LayoutAlign } from "./celement-layout";
 import {
-  celementAddAction,
+  celementAddedAction,
   celementChangePositionAction,
+  celementCreateAction,
+  celementRemoveAction,
   celementSelectAction,
   celementSetLayoutAlignAction,
   celementTransformAction,
@@ -18,7 +20,14 @@ export const celementReducerMapBuilder = (
     state.currentSelectedCElementId = action.payload.celId;
   });
 
-  builder.addCase(celementAddAction, (state, action) => {
+  builder.addCase(celementCreateAction, (state, action) => {
+    state.lastCElementCreate = {
+      cel: action.payload.cel,
+      toParentCelId: action.payload.toParentCelId,
+    };
+  });
+
+  builder.addCase(celementAddedAction, (state, action) => {
     if (state.celements[action.payload.cel.id]) {
       throw new Error(
         `Celement with id: ${action.payload.cel.id} is already exist`
@@ -47,6 +56,16 @@ export const celementReducerMapBuilder = (
     };
   });
 
+  builder.addCase(celementRemoveAction, (state, action) => {
+    const cel = state.celements[action.payload.celId];
+
+    state.celements = HashHelpers.removeOne(
+      state.celements,
+      action.payload.celId
+    );
+    state.lastCElementRemoved = cel;
+  });
+
   builder.addCase(celementTransformAction, (state, action) => {
     if (action.payload.transformation.isEmpty()) return;
 
@@ -55,8 +74,12 @@ export const celementReducerMapBuilder = (
     cel.y = action.payload.transformation.y ?? cel.y;
     cel.width = action.payload.transformation.width ?? cel.width;
     cel.height = action.payload.transformation.height ?? cel.height;
-    action.payload.transformation.margins?.forEach(margin => cel.margins.set(margin));
-    action.payload.transformation.paddings?.forEach(padding => cel.paddings.set(padding));
+    action.payload.transformation.margins?.forEach((margin) =>
+      cel.margins.set(margin)
+    );
+    action.payload.transformation.paddings?.forEach((padding) =>
+      cel.paddings.set(padding)
+    );
 
     const newHash = HashHelpers.overrideOne(state.celements, cel);
     state.celements = newHash;

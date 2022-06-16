@@ -16,7 +16,7 @@ export class CanvaElementResizers extends Map<
     });
   }
 
-  public updateResizeresPosition(
+  updateResizeresPosition(
     parentCaelPosition: CanvaElementPosition,
     parentCaelBound: CanvaElementBound) {
     Array.from(this.values()).forEach((resizer) => {
@@ -45,26 +45,30 @@ export class CanvaElementResizers extends Map<
     });
   }
 
-  syncPositionWith(resizerDir: ResizerDirection, position: number) {
-    const resizer = this.get(resizerDir)!;
-
-    switch (resizer.direction) {
-      case ResizerDirection.Left:
-        this.get(ResizerDirection.Top)!.circle.x = position;
-        this.get(ResizerDirection.Bottom)!.circle.x = position;
-        break;
-      case ResizerDirection.Top:
-        this.get(ResizerDirection.Left)!.circle.y = position;
-        this.get(ResizerDirection.Right)!.circle.y = position;
-        break;
-      case ResizerDirection.Right:
-        this.get(ResizerDirection.Top)!.circle.x = position;
-        this.get(ResizerDirection.Bottom)!.circle.x = position;
-        break;
-      case ResizerDirection.Bottom:
-        this.get(ResizerDirection.Left)!.circle.y = position;
-        this.get(ResizerDirection.Right)!.circle.y = position;
-        break;
-    }
+  destroyAll() {
+    this.forEach(resizer => resizer.destroy());
   }
+
+  // syncPositionWith(resizerDir: ResizerDirection, position: number) {
+  //   const resizer = this.get(resizerDir)!;
+
+  //   switch (resizer.direction) {
+  //     case ResizerDirection.Left:
+  //       this.get(ResizerDirection.Top)!.circle.x = position;
+  //       this.get(ResizerDirection.Bottom)!.circle.x = position;
+  //       break;
+  //     case ResizerDirection.Top:
+  //       this.get(ResizerDirection.Left)!.circle.y = position;
+  //       this.get(ResizerDirection.Right)!.circle.y = position;
+  //       break;
+  //     case ResizerDirection.Right:
+  //       this.get(ResizerDirection.Top)!.circle.x = position;
+  //       this.get(ResizerDirection.Bottom)!.circle.x = position;
+  //       break;
+  //     case ResizerDirection.Bottom:
+  //       this.get(ResizerDirection.Left)!.circle.y = position;
+  //       this.get(ResizerDirection.Right)!.circle.y = position;
+  //       break;
+  //   }
+  // }
 }

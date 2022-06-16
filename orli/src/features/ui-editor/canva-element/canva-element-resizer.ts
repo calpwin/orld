@@ -72,6 +72,10 @@ export class CanvaElementResizer {
     this.bindevents();
   }
 
+  destroy() {
+    this._circle.destroy();
+  }
+
   private bindevents() {
     this._circle.on("mousedown", (event) => {
       this._moving = true;

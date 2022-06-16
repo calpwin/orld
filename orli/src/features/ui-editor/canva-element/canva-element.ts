@@ -5,7 +5,7 @@ import { watch } from "../../../rx/watch";
 import store from "../../../rx/store";
 
 import {
-  celementAddAction,
+  celementAddedAction,
   celementSelectAction,
 } from "../celement/celemet.actions";
 import {
@@ -44,12 +44,11 @@ export class CanvaElement {
   private _outerY!: number;
   private _outerWidth!: CanvaElementDimension;
   private _outerHeight!: CanvaElementDimension;
-  private readonly _margins = new CElementIndents(
-    // new CElementIndent(5, CElementMarginDirection.Top),
-    // new CElementIndent(15, CElementMarginDirection.Right),
-    // new CElementIndent(10, CElementMarginDirection.Bottom),
-    // new CElementIndent(0, CElementMarginDirection.Left)
-  );
+  private readonly _margins = new CElementIndents();
+  // new CElementIndent(5, CElementMarginDirection.Top),
+  // new CElementIndent(15, CElementMarginDirection.Right),
+  // new CElementIndent(10, CElementMarginDirection.Bottom),
+  // new CElementIndent(0, CElementMarginDirection.Left)
   private readonly _paddings = new CElementIndents(
     new CElementIndent(10, CElementMarginDirection.Top),
     new CElementIndent(10, CElementMarginDirection.Right),
@@ -88,8 +87,8 @@ export class CanvaElement {
   get innerBound() {
     return {
       width: this._innerWidthInPx,
-      height: this._innerHeightInPx
-    }
+      height: this._innerHeightInPx,
+    };
   }
 
   /** Position with margings */
@@ -136,7 +135,7 @@ export class CanvaElement {
       this.removeResizers();
     }
 
-    this.redraw();
+    this.redrawSelf();
   }
 
   /* Is element can be moved */
@@ -150,77 +149,20 @@ export class CanvaElement {
 
   onResizeStop = new Subject<string>();
 
-  constructor() {
-    this.id = this.createId();
-
-    this._flexboxAdapter = Ioc.Conatiner.get<FlexboxAdapter>(FlexboxAdapter);
-
-    this.bindEvents();
-  }
-
-  create(
+  constructor(
     x: number,
     y: number,
     width: CElementDimension,
     height: CElementDimension,
     fill = 0xffffff
   ) {
-    const layoutAling = new CElementLayoutAlign();
+    this.id = this.createId();
 
-    const widthInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
-      width,
-      CElementDimensionAxis.Width,
-      layoutAling,
-      undefined
-    );
-    const heightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
-      height,
-      CElementDimensionAxis.Height,
-      layoutAling,
-      undefined
-    ); // TODO set parent
+    this._flexboxAdapter = Ioc.Conatiner.get<FlexboxAdapter>(FlexboxAdapter);
 
-    this._rectangle = new Graphics();
-    this._rectangle.interactive = true;
-    this._outerX = x;
-    this._outerY = y;
-    this._outerWidth = new CanvaElementDimension(
-      width.value,
-      widthInPx,
-      width.measurement
-    );
-    this._outerHeight = new CanvaElementDimension(
-      height.value,
-      heightInPx,
-      height.measurement
-    );
-    this._rectangleFill = fill;
+    this.initialize(x, y, width, height, fill);
 
-    this.synchronizeInnerBoundAndPosition();
-
-    this.redraw();
-
-    this._rectangle.on("mouseup", (event) => {
-      this._resizers.stopMoving();
-    });
-
-    this.makeMovable();
-
-    store.dispatch(
-      celementAddAction({
-        cel: new CElement(
-          this.id,
-          this._outerX,
-          this._outerY,
-          this._outerWidth,
-          this._outerHeight,
-          this._margins,
-          this._paddings
-        ),
-      })
-    );
-
-    return this._rectangle;
+    this.bindEvents();
   }
 
   addChild(child: CanvaElement) {
@@ -228,6 +170,12 @@ export class CanvaElement {
     this._children.set(child.id, child);
 
     child.parent = this;
+
+    this.redraw();
+  }
+
+  removeChild(celdId: string) {
+    this._children.delete(celdId);
   }
 
   getChild(child: CanvaElement) {
@@ -286,13 +234,33 @@ export class CanvaElement {
 
     this.synchronizeInnerBoundAndPosition();
 
-    this.applyTransformation(changedAxis);
+    this.redraw(changedAxis);
   }
 
-  /* 
-    redraw cel from its properties
+  /**
+   * Apply Canva Element transformation (redraw element, sync resizers, update children bound eth)
+   * @param changedAxis What axis was changed
    */
-  redraw() {
+   redraw(changedAxis?: CElementDimensionAxis) {
+    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+
+    this.redrawSelf();
+    this._resizers.updateResizeresPosition(this.outerPosition, this.outerBound);
+
+    // disable movaeble for children if parent container not in Absolute display mode
+    this._children.forEach(
+      (x) =>
+        (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
+    );
+
+    this._flexboxAdapter.syncChildrenBound(this, changedAxis);
+    this._flexboxAdapter.syncChildrenPosition(this, layoutAlign);
+  }
+
+  /** 
+    Redraw cel self graphics from its properties
+   */
+  redrawSelf() {
     this._rectangle.clear();
     this._rectangle.beginFill(this._rectangleFill);
 
@@ -321,6 +289,14 @@ export class CanvaElement {
     this.drawPaddings();
 
     this._resizers.updateResizeresPosition(this.outerPosition, this.outerBound);
+  }
+
+  destroy() {
+    this.graphics.destroy();
+    this.resizers.destroyAll();
+
+    this.parent?.removeChild(this.id);
+    this.children.forEach(child => child.destroy());
   }
 
   private drawMargins() {
@@ -374,7 +350,10 @@ export class CanvaElement {
 
     if (this._paddings.right.isSet)
       this._rectangle.drawRect(
-        this._outerX + this._margins.left.value + this._outerWidth.valueInPx - this._paddings.right.value,
+        this._outerX +
+          this._margins.left.value +
+          this._outerWidth.valueInPx -
+          this._paddings.right.value,
         this._outerY + this._margins.top.value,
         this._paddings.right.value,
         this.outerBound.height.valueInPx
@@ -383,7 +362,10 @@ export class CanvaElement {
     if (this._paddings.bottom.isSet)
       this._rectangle.drawRect(
         this._outerX + this._margins.left.value,
-        this._outerY + this._margins.top.value + this._outerHeight.valueInPx - this._paddings.bottom.value,
+        this._outerY +
+          this._margins.top.value +
+          this._outerHeight.valueInPx -
+          this._paddings.bottom.value,
         this.outerBound.width.valueInPx,
         this._paddings.bottom.value
       );
@@ -397,6 +379,71 @@ export class CanvaElement {
       );
 
     this._rectangle.endFill();
+  }
+
+  private initialize(
+    x: number,
+    y: number,
+    width: CElementDimension,
+    height: CElementDimension,
+    fill = 0xffffff
+  ) {
+    const layoutAling = new CElementLayoutAlign();
+
+    const widthInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
+      width,
+      CElementDimensionAxis.Width,
+      layoutAling,
+      undefined
+    );
+    const heightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
+      height,
+      CElementDimensionAxis.Height,
+      layoutAling,
+      undefined
+    ); // TODO set parent
+
+    this._rectangle = new Graphics();
+    this._rectangle.interactive = true;
+    this._outerX = x;
+    this._outerY = y;
+    this._outerWidth = new CanvaElementDimension(
+      width.value,
+      widthInPx,
+      width.measurement
+    );
+    this._outerHeight = new CanvaElementDimension(
+      height.value,
+      heightInPx,
+      height.measurement
+    );
+    this._rectangleFill = fill;
+
+    this.synchronizeInnerBoundAndPosition();
+
+    this.redrawSelf();
+
+    this._rectangle.on("mouseup", (event) => {
+      this._resizers.stopMoving();
+    });
+
+    this.makeMovable();
+
+    store.dispatch(
+      celementAddedAction({
+        cel: new CElement(
+          this.id,
+          this._outerX,
+          this._outerY,
+          this._outerWidth,
+          this._outerHeight,
+          this._margins,
+          this._paddings
+        ),
+      })
+    );
+
+    return this._rectangle;
   }
 
   private bindEvents() {
@@ -440,13 +487,15 @@ export class CanvaElement {
       CElementDimensionAxis.Width | CElementDimensionAxis.Height;
 
     if (
-      this.outerBound.width.measurement === CElementDimensionMeasurement.Percent &&
+      this.outerBound.width.measurement ===
+        CElementDimensionMeasurement.Percent &&
       (!parentChangeDimensionAxis ||
         (parentChangeDimensionAxis & CElementDimensionAxis.Width) ===
           CElementDimensionAxis.Width)
     ) {
       const updatedWidthInPx =
-        (this.parent.outerBound.totalWidthInPx * this.outerBound.width.value) / 100;
+        (this.parent.outerBound.totalWidthInPx * this.outerBound.width.value) /
+        100;
       if (updatedWidthInPx !== this._outerWidth.valueInPx) {
         this._outerWidth.valueInPx = updatedWidthInPx;
         needRedraw = true;
@@ -456,13 +505,16 @@ export class CanvaElement {
     }
 
     if (
-      this.outerBound.height.measurement === CElementDimensionMeasurement.Percent &&
+      this.outerBound.height.measurement ===
+        CElementDimensionMeasurement.Percent &&
       (!parentChangeDimensionAxis ||
         (parentChangeDimensionAxis & CElementDimensionAxis.Height) ===
           CElementDimensionAxis.Height)
     ) {
       const updatedHeightInPx =
-        (this.parent.outerBound.totalHeihgtInPx * this.outerBound.height.value) / 100;
+        (this.parent.outerBound.totalHeihgtInPx *
+          this.outerBound.height.value) /
+        100;
       if (updatedHeightInPx !== this._outerHeight.valueInPx) {
         this._outerHeight.valueInPx = updatedHeightInPx;
         needRedraw = true;
@@ -472,43 +524,25 @@ export class CanvaElement {
     }
 
     if (needRedraw) {
-      this.applyTransformation(changedAxis);
+      this.redraw(changedAxis);
     }
   }
 
   /** Synchronize inner x, y, width, height with outer and margins, paddings */
   private synchronizeInnerBoundAndPosition() {
-    this._innerX = this._outerX + this._margins.left.value + this._paddings.left.value;
-    this._innerY = this._outerY + this._margins.top.value + this._paddings.top.value;
+    this._innerX =
+      this._outerX + this._margins.left.value + this._paddings.left.value;
+    this._innerY =
+      this._outerY + this._margins.top.value + this._paddings.top.value;
 
     this._innerWidthInPx =
-      this._outerWidth.valueInPx -      
+      this._outerWidth.valueInPx -
       (this._paddings.left.value + this._paddings.right.value);
 
     this._innerHeightInPx =
-      this._outerHeight.valueInPx -      
+      this._outerHeight.valueInPx -
       (this._paddings.top.value + this._paddings.bottom.value);
-  }
-
-  /**
-   * Apply Canva Element transformation (redraw element, sync resizers, update children bound eth)
-   * @param changedAxis What axis was changed
-   */
-  private applyTransformation(changedAxis?: CElementDimensionAxis) {
-    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
-
-    this.redraw();
-    this._resizers.updateResizeresPosition(this.outerPosition, this.outerBound);
-
-    // disable movaeble for children if parent container not in Absolute display mode
-    this._children.forEach(
-      (x) =>
-        (x.isMovaeble = layoutAlign.displayMode === LayoutDisplayMode.Absolute)
-    );
-
-    this._flexboxAdapter.syncChildrenBound(this, changedAxis);
-    this._flexboxAdapter.syncChildrenPosition(this, layoutAlign);
-  }
+  }  
 
   private addResizers() {
     [
