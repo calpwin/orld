@@ -392,10 +392,10 @@ export class FlexboxAdapter {
     const parentDimValPx =
       axis === CElementDimensionAxis.Width
         ? parent
-          ? parent.outerBound.totalWidthInPx
+          ? parent.innerBound.width
           : this._editorService.app.stage.width
         : parent
-        ? parent.outerBound.totalHeihgtInPx
+        ? parent.innerBound.height
         : this._editorService.app.stage.height;
 
     if (dimension.measurement === CElementDimensionMeasurement.Percent) {

@@ -119,10 +119,11 @@ export class CanvaElementResizer {
             parentCaelPostion.x += this._offsetX;
 
             parentCaelBound.width.valueInPx -= this._offsetX;
-            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+            
+            CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.width,
-              this._cael.parent?.outerBound.width ??
-                new CanvaElementDimension(this._editorService.app.stage.width)
+               this._cael.parent?.innerBound.width ??
+                this._editorService.app.stage.width
             );
 
             this._circle.x += this._offsetX;
@@ -131,30 +132,30 @@ export class CanvaElementResizer {
             parentCaelPostion.y += this._offsetY;
 
             parentCaelBound.height.valueInPx -= this._offsetY;
-            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+            CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.height,
-              this._cael.parent?.outerBound.height ??
-                new CanvaElementDimension(this._editorService.app.stage.height)
+              this._cael.parent?.innerBound.height ??
+                this._editorService.app.stage.height
             );
 
             this._circle.y += this._offsetY;
             break;
           case ResizerDirection.Right:
             parentCaelBound.width.valueInPx += this._offsetX;
-            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+            CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.width,
-              this._cael.parent?.outerBound.width ??
-                new CanvaElementDimension(this._editorService.app.stage.width)
+              this._cael.parent?.innerBound.width ??
+                this._editorService.app.stage.width
             );
 
             this._circle.x += this._offsetX;
             break;
           case ResizerDirection.Bottom:
             parentCaelBound.height.valueInPx += this._offsetY;
-            CanvaElementDimension.syncDimensionInPxWithParentDimensionRef(
+            CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.height,
-              this._cael.parent?.outerBound.height ??
-                new CanvaElementDimension(this._editorService.app.stage.height)
+              this._cael.parent?.innerBound.height ??
+                this._editorService.app.stage.height
             );
 
             this._circle.y += this._offsetY;

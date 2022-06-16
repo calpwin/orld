@@ -35,12 +35,12 @@ export class CanvaElementDimension extends CElementDimension {
     setup value at the end.
     If current dimension in percent, get current valueInPx and calculate value in percent related to parent Canva Element valueInPx    
   */
-  static syncDimensionInPxWithParentDimensionRef(
+  static syncDimensionWithParentDimensionRef(
     dimension: CanvaElementDimension,
-    parentDimension: CanvaElementDimension
+    parentDimensionInPx: number
   ) {
     if (dimension.measurement === CElementDimensionMeasurement.Percent) {
-      dimension.value = (100 * dimension.valueInPx) / parentDimension.valueInPx;
+      dimension.value = (100 * dimension.valueInPx) / parentDimensionInPx;
     } else if (dimension.measurement === CElementDimensionMeasurement.Px) {
         // dimension.value = dimension.valueInPx;
     } else {

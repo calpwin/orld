@@ -494,10 +494,10 @@ export class CanvaElement {
           CElementDimensionAxis.Width)
     ) {
       const updatedWidthInPx =
-        (this.parent.outerBound.totalWidthInPx * this.outerBound.width.value) /
+        (this.parent.innerBound.width * this.outerBound.width.value) /
         100;
       if (updatedWidthInPx !== this._outerWidth.valueInPx) {
-        this._outerWidth.valueInPx = updatedWidthInPx;
+        this._outerWidth.valueInPx = updatedWidthInPx - this._margins.left.value - this._margins.right.value;
         needRedraw = true;
       } else {
         changedAxis &= ~CElementDimensionAxis.Width;
@@ -512,11 +512,11 @@ export class CanvaElement {
           CElementDimensionAxis.Height)
     ) {
       const updatedHeightInPx =
-        (this.parent.outerBound.totalHeihgtInPx *
+        (this.parent.innerBound.height *
           this.outerBound.height.value) /
         100;
       if (updatedHeightInPx !== this._outerHeight.valueInPx) {
-        this._outerHeight.valueInPx = updatedHeightInPx;
+        this._outerHeight.valueInPx = updatedHeightInPx - this._margins.top.value - this._margins.bottom.value;
         needRedraw = true;
       } else {
         changedAxis &= ~CElementDimensionAxis.Height;
