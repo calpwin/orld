@@ -29,12 +29,15 @@ import {
   CElementMarginDirection,
   CElementIndents,
 } from "../celement/celement-margin";
+import { CanvaElementService } from "../../../services/canva-element.service";
 
 export class CanvaElement {
   private readonly _resizers = new CanvaElementResizers();
   private readonly _flexboxAdapter: FlexboxAdapter;
 
   readonly id!: string;
+  /** Is current Cael root element for other caels */
+  readonly isRootCael!: boolean;
 
   private _rectangle!: Graphics;
   private _rectMoving = false;
@@ -129,6 +132,8 @@ export class CanvaElement {
   set isSelected(value: boolean) {
     this._isSelected = value;
 
+    if (this.isRootCael) return;
+
     if (this._isSelected) {
       this.addResizers();
     } else {
@@ -154,9 +159,12 @@ export class CanvaElement {
     y: number,
     width: CElementDimension,
     height: CElementDimension,
-    fill = 0xffffff
+    fill = 0xffffff,
+    parentCel?: CanvaElement
   ) {
-    this.id = this.createId();
+    this.id = !parentCel ? CElement.RootCelId : this.createId();    
+    this.parent = parentCel;
+    this.isRootCael = this.id === CElement.RootCelId;
 
     this._flexboxAdapter = Ioc.Conatiner.get<FlexboxAdapter>(FlexboxAdapter);
 
@@ -241,7 +249,7 @@ export class CanvaElement {
    * Apply Canva Element transformation (redraw element, sync resizers, update children bound eth)
    * @param changedAxis What axis was changed
    */
-   redraw(changedAxis?: CElementDimensionAxis) {
+  redraw(changedAxis?: CElementDimensionAxis) {
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
 
     this.redrawSelf();
@@ -296,7 +304,7 @@ export class CanvaElement {
     this.resizers.destroyAll();
 
     this.parent?.removeChild(this.id);
-    this.children.forEach(child => child.destroy());
+    this.children.forEach((child) => child.destroy());
   }
 
   private drawMargins() {
@@ -427,20 +435,22 @@ export class CanvaElement {
       this._resizers.stopMoving();
     });
 
+    this.makeSelectable();
     this.makeMovable();
 
+    const cel = new CElement(
+      this.id,
+      this._outerX,
+      this._outerY,
+      this._outerWidth,
+      this._outerHeight,
+      this._margins,
+      this._paddings
+    );
+    cel.parentCelId = this.parent?.id;
+
     store.dispatch(
-      celementAddedAction({
-        cel: new CElement(
-          this.id,
-          this._outerX,
-          this._outerY,
-          this._outerWidth,
-          this._outerHeight,
-          this._margins,
-          this._paddings
-        ),
-      })
+      celementAddedAction({cel, toParentCelId: this.parent?.id})
     );
 
     return this._rectangle;
@@ -494,10 +504,12 @@ export class CanvaElement {
           CElementDimensionAxis.Width)
     ) {
       const updatedWidthInPx =
-        (this.parent.innerBound.width * this.outerBound.width.value) /
-        100;
+        (this.parent.innerBound.width * this.outerBound.width.value) / 100;
       if (updatedWidthInPx !== this._outerWidth.valueInPx) {
-        this._outerWidth.valueInPx = updatedWidthInPx - this._margins.left.value - this._margins.right.value;
+        this._outerWidth.valueInPx =
+          updatedWidthInPx -
+          this._margins.left.value -
+          this._margins.right.value;
         needRedraw = true;
       } else {
         changedAxis &= ~CElementDimensionAxis.Width;
@@ -512,11 +524,12 @@ export class CanvaElement {
           CElementDimensionAxis.Height)
     ) {
       const updatedHeightInPx =
-        (this.parent.innerBound.height *
-          this.outerBound.height.value) /
-        100;
+        (this.parent.innerBound.height * this.outerBound.height.value) / 100;
       if (updatedHeightInPx !== this._outerHeight.valueInPx) {
-        this._outerHeight.valueInPx = updatedHeightInPx - this._margins.top.value - this._margins.bottom.value;
+        this._outerHeight.valueInPx =
+          updatedHeightInPx -
+          this._margins.top.value -
+          this._margins.bottom.value;
         needRedraw = true;
       } else {
         changedAxis &= ~CElementDimensionAxis.Height;
@@ -542,7 +555,7 @@ export class CanvaElement {
     this._innerHeightInPx =
       this._outerHeight.valueInPx -
       (this._paddings.top.value + this._paddings.bottom.value);
-  }  
+  }
 
   private addResizers() {
     [
@@ -565,18 +578,20 @@ export class CanvaElement {
     this._resizers.clear();
   }
 
-  private makeMovable() {
-    let startMoveX = 0;
-    let startMoveY = 0;
-
+  private makeSelectable() {
     this._rectangle.on("click", (event: InteractionEvent) => {
       event.stopPropagation();
 
       store.dispatch(celementSelectAction({ celId: this.id }));
     });
+  }
+
+  private makeMovable() {
+    let startMoveX = 0;
+    let startMoveY = 0;
 
     this._rectangle.on("mousedown", (event: InteractionEvent) => {
-      if (!this._isMovaeble) {
+      if (!this._isMovaeble || this.isRootCael) {
         event.stopped = true;
         event.stopPropagationHint = true;
         event.stopPropagation();
@@ -593,7 +608,7 @@ export class CanvaElement {
     });
 
     this._rectangle.on("mousemove", (event: InteractionEvent) => {
-      if (!this._isMovaeble || !this._rectMoving || this._resizers.isMoving)
+      if (!this._isMovaeble || !this._rectMoving || this._resizers.isMoving || this.isRootCael)
         return;
 
       this._rectangle.x += event.data.global.x - startMoveX;
@@ -606,7 +621,7 @@ export class CanvaElement {
     });
 
     this._rectangle.on("mouseup", (event: InteractionEvent) => {
-      if (!this._isMovaeble) return;
+      if (!this._isMovaeble || this.isRootCael) return;
 
       this._rectMoving = false;
 

@@ -24,6 +24,16 @@ export class CElementToCreate {
 }
 
 export class CElement extends CElementToCreate {
+  public static RootCelId = 'root-cel';
+
+  public parentCelId?: string;
+  public childrenCelIds: string[] = [];
+
+  /** Root cel container for other cels */
+  get isRoot() {
+    return this.id === CElement.RootCelId;
+  }
+
   constructor(
     public id: string,
     x: number,
@@ -34,6 +44,14 @@ export class CElement extends CElementToCreate {
     paddings: CElementIndents
   ) {
     super(x, y, width, height, margins, paddings);
+  }
+
+  static createFromCel(cel: CElement) {
+    const newCel = new CElement(cel.id, cel.x, cel.y, cel.width, cel.height, cel.margins, cel.paddings);
+    newCel.parentCelId = cel.parentCelId;
+    newCel.childrenCelIds = cel.childrenCelIds;
+
+    return newCel;
   }
 }
 

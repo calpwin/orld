@@ -5,7 +5,10 @@ import store from "../rx/store";
 import { editorMouseMoveAction } from "../features/ui-editor/editor/editor.actions";
 import { celementSelectAction } from "../features/ui-editor/celement/celemet.actions";
 import { InteractionEvent } from "pixi.js";
-import { CElementDimension } from "../features/ui-editor/celement/celement";
+import {
+  CElement,
+  CElementDimension,
+} from "../features/ui-editor/celement/celement";
 import { EditorService } from "./editor.service";
 import { watch } from "../rx/watch";
 import {
@@ -54,6 +57,23 @@ export class CanvaElementService {
     });
   }
 
+  /** Recreate Caels from cels */
+  recreateFromCels(cels: CElement[]) {
+    const rootCel = Array.from(this._els.values()).find(x => x.isRootCael);
+    if (rootCel)
+      this.removeCael(rootCel.id);
+
+    cels.forEach((cel) => {
+      this.createCael(
+        cel.x, 
+        cel.y, 
+        cel.width, 
+        cel.height,
+        cel.isRoot ? 0x99aaaa : 0xed04ff,
+        cel.parentCelId);
+    });
+  }
+
   createCael(
     x: number,
     y: number,
@@ -62,18 +82,26 @@ export class CanvaElementService {
     fill = 0xed04ff,
     toParentId?: string
   ) {
-    const cael = new CanvaElement(x, y, width, height, fill);
+    const parentCael = toParentId ? this._els.get(toParentId) : undefined;
+
+    const cael = new CanvaElement(
+      x,
+      y,
+      width,
+      height,
+      fill,
+      parentCael
+    );
     this._els.set(cael.id, cael);
 
     cael.onResizeStop.subscribe(() => {
       this.stopCelResizing();
     });
 
-    if (toParentId) {
-      const parentCael = this._els.get(toParentId);
-
+    if (parentCael) {      
       if (!parentCael) throw Error(`No cael found for id ${toParentId}`);
 
+      cael.parent = parentCael;
       parentCael.addChild(cael);
     } else {
       this._editorService.app.stage.addChild(cael.graphics);
@@ -86,6 +114,10 @@ export class CanvaElementService {
     return this._els.get(id);
   }
 
+  getAllCaels() {
+    return Array.from(this._els.values());
+  }
+
   removeCael(celId: string) {
     const cael = this._els.get(celId);
 
@@ -93,6 +125,7 @@ export class CanvaElementService {
 
     cael.destroy();
     this._els.delete(celId);
+    cael.children.forEach(child => this._els.delete(child.id));
     cael.parent?.redraw();
   }
 

@@ -572,7 +572,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
 
   private onCElementRemove = () => {
     const celId = this.state.currentCaelId!;
-    store.dispatch(celementRemoveAction({ celId }));
+    store.dispatch(celementRemoveAction({ celId, withChildren: true }));
     store.dispatch(celementSelectAction({ celId: undefined }));
   }
 }

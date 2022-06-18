@@ -1,7 +1,7 @@
 import { ActionReducerMapBuilder } from "@reduxjs/toolkit";
 import { HashHelpers } from "../../../helpers/hash.helper";
 import { editorInitialState } from "../editor.state";
-import { CElementTransformation } from "./celement";
+import { CElement, CElementTransformation } from "./celement";
 import { FlexDirection, LayoutAlign } from "./celement-layout";
 import {
   celementAddedAction,
@@ -34,13 +34,58 @@ export const celementReducerMapBuilder = (
       );
     }
 
-    const newHash = HashHelpers.deepCopy(state.celements);
+    let newHash = HashHelpers.deepCopy(state.celements);
     newHash[action.payload.cel.id] = action.payload.cel;
+
+    if (action.payload.cel.parentCelId) {
+      const parentCel = CElement.createFromCel(
+        state.celements[action.payload.cel.parentCelId]
+      );
+      parentCel.childrenCelIds.push(action.payload.cel.id);
+
+      newHash = HashHelpers.overrideOne(newHash, parentCel);
+    }
+
     state.celements = newHash;
   });
 
+  builder.addCase(celementRemoveAction, (state, action) => {
+    const cel = state.celements[action.payload.celId];
+
+    let entries = HashHelpers.toEntries(state.celements);
+
+    const removeOne = (cel: CElement) => {
+      entries = entries.filter(
+        (x) => x[1].id !== cel.id && x[1].id !== cel.parentCelId
+      );
+
+      if (cel.parentCelId) {
+        let parentCel = entries.find((x) => x[0] === cel.parentCelId)?.[1];
+
+        if (parentCel) {
+          parentCel = CElement.createFromCel(state.celements[cel.parentCelId]!);
+          parentCel.childrenCelIds = parentCel.childrenCelIds.filter(
+            (celId) => celId === cel.id
+          );
+          entries.push([parentCel.id, parentCel]);
+        }
+      }
+
+      if (action.payload.withChildren) {
+        cel.childrenCelIds.forEach((childId) => {
+          removeOne(state.celements[childId]);
+        });
+      }
+    };
+
+    removeOne(cel);
+
+    state.celements = HashHelpers.create(entries);
+    state.lastCElementRemoved = cel;
+  });
+
   builder.addCase(celementChangePositionAction, (state, action) => {
-    const cel = { ...state.celements[action.payload.celId] };
+    const cel = CElement.createFromCel(state.celements[action.payload.celId]);
     cel.x = action.payload.position.x;
     cel.y = action.payload.position.y;
 
@@ -56,20 +101,10 @@ export const celementReducerMapBuilder = (
     };
   });
 
-  builder.addCase(celementRemoveAction, (state, action) => {
-    const cel = state.celements[action.payload.celId];
-
-    state.celements = HashHelpers.removeOne(
-      state.celements,
-      action.payload.celId
-    );
-    state.lastCElementRemoved = cel;
-  });
-
   builder.addCase(celementTransformAction, (state, action) => {
     if (action.payload.transformation.isEmpty()) return;
 
-    const cel = { ...state.celements[action.payload.celId] };
+    const cel = CElement.createFromCel(state.celements[action.payload.celId]);
     cel.x = action.payload.transformation.x ?? cel.x;
     cel.y = action.payload.transformation.y ?? cel.y;
     cel.width = action.payload.transformation.width ?? cel.width;
@@ -98,7 +133,7 @@ export const celementReducerMapBuilder = (
   });
 
   builder.addCase(celementSetLayoutAlignAction, (state, action) => {
-    const cel = { ...state.celements[action.payload.celId] };
+    const cel = CElement.createFromCel(state.celements[action.payload.celId]);
 
     // Should centered align for non main axis,
     // as not all aligns supported for it

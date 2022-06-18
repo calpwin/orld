@@ -10,10 +10,16 @@ import { currentSelectedCelementSelector } from "../features/ui-editor/celement/
 import store from "../rx/store";
 import { watch } from "../rx/watch";
 import {
-  CElementDimension, CElementToCreate,
+  CElementDimension,
+  CElementToCreate,
 } from "../features/ui-editor/celement/celement";
 import { EditorService } from "../services/editor.service";
-import { celementCreateAction } from "../features/ui-editor/celement/celemet.actions";
+import {
+  celementCreateAction,
+  celementRemoveAction,
+} from "../features/ui-editor/celement/celemet.actions";
+import { ChooseMediaComponent } from "./choose-media/choose-media.component";
+import { HashHelpers } from "../helpers/hash.helper";
 
 export class App extends React.Component<{}, {}> {
   private readonly _cElementService: CanvaElementService;
@@ -34,11 +40,15 @@ export class App extends React.Component<{}, {}> {
   render() {
     return (
       <div id="app-wrapper">
-        <CElementAddNewComponent />
+        <ChooseMediaComponent />
 
-        <div id="editor-wrapper"></div>
+        <div id="editor-wrapper">
+          <CElementAddNewComponent />
 
-        <CElementPropertiesComponent />
+          <div id="editor-canva-wrapper"></div>
+
+          <CElementPropertiesComponent />
+        </div>
       </div>
     );
   }
@@ -63,7 +73,9 @@ export class App extends React.Component<{}, {}> {
 
     this._cElementService.initialize(new PIXI.InteractionManager(renderer));
 
-    const rootEl = document.getElementById("editor-wrapper") as HTMLElement;
+    const rootEl = document.getElementById(
+      "editor-canva-wrapper"
+    ) as HTMLElement;
     // (renderer as Renderer).addSystem(<any>EventSystem, 'events');
     app.resizeTo = rootEl;
 
@@ -75,8 +87,8 @@ export class App extends React.Component<{}, {}> {
     const container = this._cElementService.createCael(
       0,
       0,
-      new CElementDimension(400),
-      new CElementDimension(400),
+      new CElementDimension(rootEl.clientWidth),
+      new CElementDimension(rootEl.clientHeight),
       0x99aaaa
     );
 
@@ -88,8 +100,8 @@ export class App extends React.Component<{}, {}> {
           new CElementDimension(60),
           new CElementDimension(30)
         ),
-        toParentCelId: container.id
-      }),      
+        toParentCelId: container.id,
+      })
     );
 
     store.dispatch(
@@ -100,9 +112,26 @@ export class App extends React.Component<{}, {}> {
           new CElementDimension(60),
           new CElementDimension(30)
         ),
-        toParentCelId: container.id
+        toParentCelId: container.id,
       })
     );
+
+    const cels = HashHelpers.toEntries(store.getState().editor.celements).map(
+      (x) => x[1]
+    );
+
+    setTimeout(() => {
+      store.dispatch(
+        celementRemoveAction({
+          celId: cels.find((x) => x.isRoot)!.id,
+          withChildren: true,
+        })
+      );
+
+      this._cElementService.recreateFromCels(cels.sort((a,b) =>  (a > b ? 1 : -1)));
+
+      console.log('recreated');
+    }, 3000);
 
     this._isEditorCreated = true;
   }

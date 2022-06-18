@@ -6,11 +6,11 @@ export const celementCreateAction = createAction<{ cel: CElementToCreate, toPare
   "celement/create"
 );
 
-export const celementAddedAction = createAction<{ cel: CElement }>(
+export const celementAddedAction = createAction<{ cel: CElement, toParentCelId?: string }>(
   "celement/added"
 );
 
-export const celementRemoveAction = createAction<{ celId: string }>(
+export const celementRemoveAction = createAction<{ celId: string, withChildren: boolean }>(
   "celement/remove"
 );
 
