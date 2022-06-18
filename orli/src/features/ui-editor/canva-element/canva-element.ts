@@ -29,11 +29,12 @@ import {
   CElementMarginDirection,
   CElementIndents,
 } from "../celement/celement-margin";
-import { CanvaElementService } from "../../../services/canva-element.service";
+import { Unsubscribe } from "@reduxjs/toolkit";
 
 export class CanvaElement {
   private readonly _resizers = new CanvaElementResizers();
   private readonly _flexboxAdapter: FlexboxAdapter;
+  private readonly _unsubscribtions: Unsubscribe[] = [];
 
   readonly id!: string;
   /** Is current Cael root element for other caels */
@@ -302,6 +303,7 @@ export class CanvaElement {
   destroy() {
     this.graphics.destroy();
     this.resizers.destroyAll();
+    this._unsubscribtions.forEach(unsub => unsub());
 
     this.parent?.removeChild(this.id);
     this.children.forEach((child) => child.destroy());
@@ -460,7 +462,7 @@ export class CanvaElement {
     const wlastCElementTransformed = watch(() =>
       lastCElementTransformedSelector(store.getState().editor)
     );
-    store.subscribe(
+    const wlastCElementTransformedSubscription = store.subscribe(
       wlastCElementTransformed((newVal, oldVal) => {
         if (
           !newVal ||
@@ -479,6 +481,8 @@ export class CanvaElement {
         );
       })
     );
+
+    this._unsubscribtions.push(wlastCElementTransformedSubscription);
   }
 
   /**

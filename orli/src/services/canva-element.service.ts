@@ -59,10 +59,6 @@ export class CanvaElementService {
 
   /** Recreate Caels from cels */
   recreateFromCels(cels: CElement[]) {
-    const rootCel = Array.from(this._els.values()).find(x => x.isRootCael);
-    if (rootCel)
-      this.removeCael(rootCel.id);
-
     cels.forEach((cel) => {
       this.createCael(
         cel.x, 

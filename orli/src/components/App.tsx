@@ -120,18 +120,18 @@ export class App extends React.Component<{}, {}> {
       (x) => x[1]
     );
 
-    setTimeout(() => {
-      store.dispatch(
-        celementRemoveAction({
-          celId: cels.find((x) => x.isRoot)!.id,
-          withChildren: true,
-        })
-      );
+    // setTimeout(() => {
+    //   store.dispatch(
+    //     celementRemoveAction({
+    //       celId: cels.find((x) => x.isRoot)!.id,
+    //       withChildren: true,
+    //     })
+    //   );
 
-      this._cElementService.recreateFromCels(cels.sort((a,b) =>  (a > b ? 1 : -1)));
+    //   this._cElementService.recreateFromCels(cels.sort((a,b) =>  (a > b ? 1 : -1)));
 
-      console.log('recreated');
-    }, 3000);
+    //   console.log('recreated');
+    // }, 3000);
 
     this._isEditorCreated = true;
   }
