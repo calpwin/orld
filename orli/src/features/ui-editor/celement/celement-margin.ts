@@ -23,6 +23,10 @@ export class CElementIndents {
   public bottom!: CElementIndent;
   public left!: CElementIndent;
 
+  get all() {
+    return [this.top, this.right, this.bottom, this.left];
+  }
+
   constructor();
   constructor(top: CElementIndent);
   constructor(top: CElementIndent, right: CElementIndent);

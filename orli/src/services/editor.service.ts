@@ -80,13 +80,15 @@ export class EditorService {
     }
 
     const newRootCael = this.createRootContainer(
-      ({ ...rootCel } as CElementToCreate) ??
-        new CElementToCreate(
-          0,
-          0,
-          new CElementDimension(this._editorHel.clientWidth),
-          new CElementDimension(this._editorHel.clientHeight)
-        ),
+      rootCel
+        ? ({ ...rootCel } as CElementToCreate)
+        : undefined ??
+            new CElementToCreate(
+              0,
+              0,
+              new CElementDimension(this._editorHel.clientWidth),
+              new CElementDimension(this._editorHel.clientHeight)
+            ),
       media
     );
 

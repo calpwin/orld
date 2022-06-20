@@ -7,6 +7,7 @@ import store from "../../../rx/store";
 import {
   celementAddedAction,
   celementSelectAction,
+  celementChangePositionQuietAction,
 } from "../celement/celemet.actions";
 import {
   CElement,
@@ -157,7 +158,9 @@ export class CanvaElement {
   onResizeStop = new Subject<string>();
 
   constructor(celToCreate: CElementToCreate, parentCael?: CanvaElement) {
-    this.id = !parentCael ? CElement.RootCelId : celToCreate.id ?? this.createId();
+    this.id = !parentCael
+      ? CElement.RootCelId
+      : celToCreate.id ?? this.createId();
     this.parent = parentCael;
     this.isRootCael = this.id === CElement.RootCelId;
 
@@ -267,7 +270,7 @@ export class CanvaElement {
     this._rectangle.clear();
     this._rectangle.beginFill(this._rectangleFill);
 
-    if (this._isSelected) {
+    if (this._isSelected && !this.isRootCael) {
       this._rectangle.lineStyle(2, 0x1555ed);
     }
 
@@ -415,6 +418,10 @@ export class CanvaElement {
       heightInPx,
       celToCreate.height.measurement
     );
+
+    celToCreate.margins.all.forEach(margin => this._margins.set(margin));
+    celToCreate.paddings.all.forEach(padding => this._paddings.set(padding));
+
     this._rectangleFill = fill;
 
     this.synchronizeInnerBoundAndPosition();
@@ -428,7 +435,7 @@ export class CanvaElement {
     this.makeSelectable();
     this.makeMovable();
 
-    const cel = CElement.createFromCelToCreate(celToCreate, this.id);    
+    const cel = CElement.createFromCelToCreate(celToCreate, this.id);
     cel.parentCelId = this.parent?.id;
 
     store.dispatch(
@@ -574,6 +581,9 @@ export class CanvaElement {
     let startMoveX = 0;
     let startMoveY = 0;
 
+    let marginX = 0;
+    let marginY = 0;
+
     this._rectangle.on("mousedown", (event: InteractionEvent) => {
       if (!this._isMovaeble || this.isRootCael) {
         event.stopped = true;
@@ -585,6 +595,8 @@ export class CanvaElement {
       this._rectMoving = true;
       startMoveX = event.data.global.x;
       startMoveY = event.data.global.y;
+      marginX = 0;
+      marginY = 0;
 
       event.stopped = true;
       event.stopPropagationHint = true;
@@ -600,11 +612,13 @@ export class CanvaElement {
       )
         return;
 
-      this._rectangle.x += event.data.global.x - startMoveX;
-      this._rectangle.y += event.data.global.y - startMoveY;
-
+      marginX += event.data.global.x - startMoveX;
+      marginY += event.data.global.y - startMoveY;
       startMoveX = event.data.global.x;
       startMoveY = event.data.global.y;
+
+      this._rectangle.x = marginX;
+      this._rectangle.y = marginY;
 
       event.stopPropagation();
     });
@@ -613,6 +627,20 @@ export class CanvaElement {
       if (!this._isMovaeble || this.isRootCael) return;
 
       this._rectMoving = false;
+
+      this._rectangle.x = 0;
+      this._rectangle.y = 0;
+      this._outerX += marginX;
+      this._outerY += marginY;
+
+      this.redraw();
+
+      store.dispatch(
+        celementChangePositionQuietAction({
+          celId: this.id,
+          position: { x: this._outerX, y: this._outerY },
+        })
+      );
 
       event.stopPropagation();
     });

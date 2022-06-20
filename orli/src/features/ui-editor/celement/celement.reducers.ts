@@ -5,7 +5,7 @@ import { CElement, CElementTransformation } from "./celement";
 import { FlexDirection, LayoutAlign } from "./celement-layout";
 import {
   celementAddedAction,
-  celementChangePositionAction,
+  celementChangePositionQuietAction,
   celementCreateAction,
   celementRemoveAction,
   celementSelectAction,
@@ -82,7 +82,7 @@ export const celementReducerMapBuilder = (
     state.lastCElementRemoved = cel;
   });
 
-  builder.addCase(celementChangePositionAction, (state, action) => {
+  builder.addCase(celementChangePositionQuietAction, (state, action) => {
     const cel = {...state.celements[action.payload.celId]};
     cel.x = action.payload.position.x;
     cel.y = action.payload.position.y;
@@ -90,13 +90,13 @@ export const celementReducerMapBuilder = (
     const newHash = HashHelpers.overrideOne(state.celements, cel);
     state.celements = newHash;
     state.lastCElementChanged = cel;
-    state.lastCElementTransformed = {
-      celId: cel.id,
-      transformation: new CElementTransformation(
-        action.payload.position.x,
-        action.payload.position.y
-      ),
-    };
+    // state.lastCElementTransformed = {
+    //   celId: cel.id,
+    //   transformation: new CElementTransformation(
+    //     action.payload.position.x,
+    //     action.payload.position.y
+    //   ),
+    // };
   });
 
   builder.addCase(celementTransformAction, (state, action) => {

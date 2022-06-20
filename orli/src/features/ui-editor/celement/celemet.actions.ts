@@ -18,8 +18,9 @@ export const celementSelectAction = createAction<{ celId: string | undefined }>(
   "celement/select"
 );
 
-/** Change position (x,y) of cel */
-export const celementChangePositionAction = createAction<{
+/** Change position (x,y) of cel quiet
+ * ! Quiet -> no @see lastCElementTransformed will be set */
+export const celementChangePositionQuietAction = createAction<{
   celId: string;
   position: { x: number; y: number };
 }>("celement/changePosition");
