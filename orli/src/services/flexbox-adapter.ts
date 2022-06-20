@@ -10,13 +10,13 @@ import {
   CElementDimensionAxis,
   CElementDimensionMeasurement,
 } from "../features/ui-editor/celement/celement";
-import { EditorService } from "./editor.service";
 import { inject, injectable } from "inversify";
+import { ApplicationService } from "../features/application/application.service";
 
 @injectable()
 export class FlexboxAdapter {
-  @inject(EditorService)
-  private readonly _editorService!: EditorService;
+  @inject(ApplicationService)
+  private readonly _applicationService!: ApplicationService;
 
   constructor() {}
 
@@ -393,10 +393,10 @@ export class FlexboxAdapter {
       axis === CElementDimensionAxis.Width
         ? parent
           ? parent.innerBound.width
-          : this._editorService.app.stage.width
+          : this._applicationService.app.stage.width
         : parent
         ? parent.innerBound.height
-        : this._editorService.app.stage.height;
+        : this._applicationService.app.stage.height;
 
     if (dimension.measurement === CElementDimensionMeasurement.Percent) {
       return parentDimValPx * (dimension.value / 100);

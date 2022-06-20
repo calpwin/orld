@@ -5,6 +5,7 @@ import {
   CElementTransformation,
 } from "./celement/celement";
 import { celementReducerMapBuilder } from "./celement/celement.reducers";
+import { EditorMediaType } from "./editor/editor-media-type";
 import { editorReducerMapBuilder } from "./editor/editor.reducers";
 
 export type CElementHash = { [id: string]: CElement };
@@ -27,6 +28,8 @@ export const editorInitialState = {
   lastCElementTransformed: <
     { celId: string; transformation: CElementTransformation } | undefined
   >undefined,
+
+  editorMedia: EditorMediaType.Default
 };
 
 export const editorReducer = createReducer(editorInitialState, (builder) => {

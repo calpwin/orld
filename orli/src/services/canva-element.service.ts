@@ -8,20 +8,21 @@ import { InteractionEvent } from "pixi.js";
 import {
   CElement,
   CElementDimension,
+  CElementToCreate,
 } from "../features/ui-editor/celement/celement";
-import { EditorService } from "./editor.service";
 import { watch } from "../rx/watch";
 import {
   lastCelementCreateSelector,
   lastCelementRemovedSelector,
 } from "../features/ui-editor/celement/celement.selectors";
+import { ApplicationService } from "../features/application/application.service";
 
 @injectable()
 export class CanvaElementService {
-  private readonly _els = new Map<string, CanvaElement>();
+  @inject(ApplicationService)
+  private readonly _applicationService!: ApplicationService;
 
-  @inject(EditorService)
-  private readonly _editorService!: EditorService;
+  private readonly _els = new Map<string, CanvaElement>();
 
   private _stageInteractionManager!: PIXI.InteractionManager;
 
@@ -60,47 +61,35 @@ export class CanvaElementService {
   /** Recreate Caels from cels */
   recreateFromCels(cels: CElement[]) {
     cels.forEach((cel) => {
-      this.createCael(
-        cel.x, 
-        cel.y, 
-        cel.width, 
-        cel.height,
-        cel.isRoot ? 0x99aaaa : 0xed04ff,
-        cel.parentCelId);
+      this.createCael(cel, cel.parentCelId);
     });
   }
 
-  createCael(
-    x: number,
-    y: number,
-    width: CElementDimension,
-    height: CElementDimension,
-    fill = 0xed04ff,
-    toParentId?: string
-  ) {
+  // createCael(
+  //   x: number,
+  //   y: number,
+  //   width: CElementDimension,
+  //   height: CElementDimension,
+  //   fill = 0xed04ff,
+  //   toParentId?: string
+  // )
+  createCael(celToCreate: CElementToCreate, toParentId?: string) {
     const parentCael = toParentId ? this._els.get(toParentId) : undefined;
 
-    const cael = new CanvaElement(
-      x,
-      y,
-      width,
-      height,
-      fill,
-      parentCael
-    );
+    const cael = new CanvaElement(celToCreate, parentCael);
     this._els.set(cael.id, cael);
 
     cael.onResizeStop.subscribe(() => {
       this.stopCelResizing();
     });
 
-    if (parentCael) {      
+    if (parentCael) {
       if (!parentCael) throw Error(`No cael found for id ${toParentId}`);
 
       cael.parent = parentCael;
       parentCael.addChild(cael);
     } else {
-      this._editorService.app.stage.addChild(cael.graphics);
+      this._applicationService.app.stage.addChild(cael.graphics);
     }
 
     return cael;
@@ -121,7 +110,7 @@ export class CanvaElementService {
 
     cael.destroy();
     this._els.delete(celId);
-    cael.children.forEach(child => this._els.delete(child.id));
+    cael.children.forEach((child) => this._els.delete(child.id));
     cael.parent?.redraw();
   }
 
@@ -145,14 +134,7 @@ export class CanvaElementService {
       wlastCelementCreate((newVal, oldVal) => {
         if (!newVal) return;
 
-        this.createCael(
-          newVal.cel.x,
-          newVal.cel.y,
-          newVal.cel.width,
-          newVal.cel.height,
-          undefined,
-          newVal.toParentCelId
-        );
+        this.createCael(newVal.cel, newVal.toParentCelId);
       })
     );
   }

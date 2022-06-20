@@ -10,6 +10,9 @@
 #choose-media-wrapper .btn {
     margin-left: 15px;
 }
+#choose-media-wrapper .btn.selected {
+    color: #34495e;
+}
 #choose-media-wrapper .btn:first-child {
     margin-left: 0;
 }

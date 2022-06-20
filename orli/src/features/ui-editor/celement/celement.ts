@@ -16,7 +16,8 @@ export class CElementToCreate {
     public width: CElementDimension,
     public height: CElementDimension,
     margins?: CElementIndents,
-    paddings?: CElementIndents
+    paddings?: CElementIndents,
+    public id?: string
   ) {
     this.margins = margins ?? new CElementIndents();
     this.paddings = paddings ?? new CElementIndents();
@@ -24,14 +25,14 @@ export class CElementToCreate {
 }
 
 export class CElement extends CElementToCreate {
-  public static RootCelId = 'root-cel';
+  public static RootCelId = "root-cel";
 
   public parentCelId?: string;
   public childrenCelIds: string[] = [];
 
   /** Root cel container for other cels */
-  get isRoot() {
-    return this.id === CElement.RootCelId;
+  static isRoot(cel: CElement) {
+    return cel.id === CElement.RootCelId;
   }
 
   constructor(
@@ -46,12 +47,20 @@ export class CElement extends CElementToCreate {
     super(x, y, width, height, margins, paddings);
   }
 
-  static createFromCel(cel: CElement) {
-    const newCel = new CElement(cel.id, cel.x, cel.y, cel.width, cel.height, cel.margins, cel.paddings);
-    newCel.parentCelId = cel.parentCelId;
-    newCel.childrenCelIds = cel.childrenCelIds;
+  static createFromCelToCreate(celToCreate: CElementToCreate, id: string, parentCelId?:string) {
+    const cel = new CElement(
+      id,
+      celToCreate.x,
+      celToCreate.y,
+      celToCreate.width,
+      celToCreate.height,
+      celToCreate.margins,
+      celToCreate.paddings
+    );
+    cel.layoutAlign = celToCreate.layoutAlign ?? new CElementLayoutAlign();
+    cel.parentCelId = parentCelId;
 
-    return newCel;
+    return cel;
   }
 }
 

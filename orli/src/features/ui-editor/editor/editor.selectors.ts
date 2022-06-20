@@ -5,3 +5,8 @@ export const lastEditorMouseMoveSelector = createSelector(
   (state: typeof editorInitialState) => state.lastEditorMouseMove,
   (x) => x
 );
+
+export const lastEditorMediaSelector = createSelector(
+  (state: typeof editorInitialState) => state.editorMedia,
+  (x) => x
+);

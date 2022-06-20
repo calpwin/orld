@@ -38,9 +38,7 @@ export const celementReducerMapBuilder = (
     newHash[action.payload.cel.id] = action.payload.cel;
 
     if (action.payload.cel.parentCelId) {
-      const parentCel = CElement.createFromCel(
-        state.celements[action.payload.cel.parentCelId]
-      );
+      const parentCel = {...state.celements[action.payload.cel.parentCelId]};
       parentCel.childrenCelIds.push(action.payload.cel.id);
 
       newHash = HashHelpers.overrideOne(newHash, parentCel);
@@ -63,7 +61,7 @@ export const celementReducerMapBuilder = (
         let parentCel = entries.find((x) => x[0] === cel.parentCelId)?.[1];
 
         if (parentCel) {
-          parentCel = CElement.createFromCel(state.celements[cel.parentCelId]!);
+          parentCel = {...state.celements[cel.parentCelId]!}
           parentCel.childrenCelIds = parentCel.childrenCelIds.filter(
             (celId) => celId === cel.id
           );
@@ -85,7 +83,7 @@ export const celementReducerMapBuilder = (
   });
 
   builder.addCase(celementChangePositionAction, (state, action) => {
-    const cel = CElement.createFromCel(state.celements[action.payload.celId]);
+    const cel = {...state.celements[action.payload.celId]};
     cel.x = action.payload.position.x;
     cel.y = action.payload.position.y;
 
@@ -104,7 +102,7 @@ export const celementReducerMapBuilder = (
   builder.addCase(celementTransformAction, (state, action) => {
     if (action.payload.transformation.isEmpty()) return;
 
-    const cel = CElement.createFromCel(state.celements[action.payload.celId]);
+    const cel = {...state.celements[action.payload.celId]};
     cel.x = action.payload.transformation.x ?? cel.x;
     cel.y = action.payload.transformation.y ?? cel.y;
     cel.width = action.payload.transformation.width ?? cel.width;
@@ -133,7 +131,7 @@ export const celementReducerMapBuilder = (
   });
 
   builder.addCase(celementSetLayoutAlignAction, (state, action) => {
-    const cel = CElement.createFromCel(state.celements[action.payload.celId]);
+    const cel = {...state.celements[action.payload.celId]};
 
     // Should centered align for non main axis,
     // as not all aligns supported for it

@@ -13,6 +13,7 @@ import {
   CElementDimension,
   CElementDimensionAxis,
   CElementDimensionMeasurement,
+  CElementToCreate,
 } from "../celement/celement";
 import { CanvaElementResizer, ResizerDirection } from "./canva-element-resizer";
 import { CanvaElementResizers } from "./CanvaElementResizers";
@@ -155,21 +156,14 @@ export class CanvaElement {
 
   onResizeStop = new Subject<string>();
 
-  constructor(
-    x: number,
-    y: number,
-    width: CElementDimension,
-    height: CElementDimension,
-    fill = 0xffffff,
-    parentCel?: CanvaElement
-  ) {
-    this.id = !parentCel ? CElement.RootCelId : this.createId();    
-    this.parent = parentCel;
+  constructor(celToCreate: CElementToCreate, parentCael?: CanvaElement) {
+    this.id = !parentCael ? CElement.RootCelId : celToCreate.id ?? this.createId();
+    this.parent = parentCael;
     this.isRootCael = this.id === CElement.RootCelId;
 
     this._flexboxAdapter = Ioc.Conatiner.get<FlexboxAdapter>(FlexboxAdapter);
 
-    this.initialize(x, y, width, height, fill);
+    this.initialize(celToCreate, this.isRootCael ? 0x99aaaa : 0xed04ff);
 
     this.bindEvents();
   }
@@ -303,7 +297,7 @@ export class CanvaElement {
   destroy() {
     this.graphics.destroy();
     this.resizers.destroyAll();
-    this._unsubscribtions.forEach(unsub => unsub());
+    this._unsubscribtions.forEach((unsub) => unsub());
 
     this.parent?.removeChild(this.id);
     this.children.forEach((child) => child.destroy());
@@ -391,23 +385,17 @@ export class CanvaElement {
     this._rectangle.endFill();
   }
 
-  private initialize(
-    x: number,
-    y: number,
-    width: CElementDimension,
-    height: CElementDimension,
-    fill = 0xffffff
-  ) {
+  private initialize(celToCreate: CElementToCreate, fill: number) {
     const layoutAling = new CElementLayoutAlign();
 
     const widthInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
-      width,
+      celToCreate.width,
       CElementDimensionAxis.Width,
       layoutAling,
       undefined
     );
     const heightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
-      height,
+      celToCreate.height,
       CElementDimensionAxis.Height,
       layoutAling,
       undefined
@@ -415,17 +403,17 @@ export class CanvaElement {
 
     this._rectangle = new Graphics();
     this._rectangle.interactive = true;
-    this._outerX = x;
-    this._outerY = y;
+    this._outerX = celToCreate.x;
+    this._outerY = celToCreate.y;
     this._outerWidth = new CanvaElementDimension(
-      width.value,
+      celToCreate.width.value,
       widthInPx,
-      width.measurement
+      celToCreate.width.measurement
     );
     this._outerHeight = new CanvaElementDimension(
-      height.value,
+      celToCreate.height.value,
       heightInPx,
-      height.measurement
+      celToCreate.height.measurement
     );
     this._rectangleFill = fill;
 
@@ -440,19 +428,11 @@ export class CanvaElement {
     this.makeSelectable();
     this.makeMovable();
 
-    const cel = new CElement(
-      this.id,
-      this._outerX,
-      this._outerY,
-      this._outerWidth,
-      this._outerHeight,
-      this._margins,
-      this._paddings
-    );
+    const cel = CElement.createFromCelToCreate(celToCreate, this.id);    
     cel.parentCelId = this.parent?.id;
 
     store.dispatch(
-      celementAddedAction({cel, toParentCelId: this.parent?.id})
+      celementAddedAction({ cel, toParentCelId: this.parent?.id })
     );
 
     return this._rectangle;
@@ -612,7 +592,12 @@ export class CanvaElement {
     });
 
     this._rectangle.on("mousemove", (event: InteractionEvent) => {
-      if (!this._isMovaeble || !this._rectMoving || this._resizers.isMoving || this.isRootCael)
+      if (
+        !this._isMovaeble ||
+        !this._rectMoving ||
+        this._resizers.isMoving ||
+        this.isRootCael
+      )
         return;
 
       this._rectangle.x += event.data.global.x - startMoveX;

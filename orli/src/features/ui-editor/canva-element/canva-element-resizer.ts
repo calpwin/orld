@@ -10,8 +10,8 @@ import { lastEditorMouseMoveSelector } from "../editor/editor.selectors";
 import { celementTransformAction } from "../celement/celemet.actions";
 import { CElementTransformation } from "../celement/celement";
 import { CanvaElementDimension } from "./canva-element-dimension";
-import { EditorService } from "../../../services/editor.service";
 import { Ioc } from "../../../base/config.inversify";
+import { ApplicationService } from "../../application/application.service";
 
 export enum ResizerDirection {
   Left = 1,
@@ -20,8 +20,8 @@ export enum ResizerDirection {
   Bottom = 4,
 }
 
-export class CanvaElementResizer {
-  private readonly _editorService: EditorService;
+export class CanvaElementResizer {  
+  private readonly _applicationService!: ApplicationService;
   private readonly _circle: Graphics;
 
   private _moving = false;
@@ -59,7 +59,7 @@ export class CanvaElementResizer {
     /* Resizer Canva Element */
     readonly _cael: CanvaElement
   ) {
-    this._editorService = Ioc.Conatiner.get<EditorService>(EditorService);
+    this._applicationService = Ioc.Conatiner.get<ApplicationService>(ApplicationService);
 
     this._circle = new Graphics();
     this._circle.beginFill(0x9966ff);
@@ -123,7 +123,7 @@ export class CanvaElementResizer {
             CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.width,
                this._cael.parent?.innerBound.width ??
-                this._editorService.app.stage.width
+                this._applicationService.app.stage.width
             );
 
             this._circle.x += this._offsetX;
@@ -135,7 +135,7 @@ export class CanvaElementResizer {
             CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.height,
               this._cael.parent?.innerBound.height ??
-                this._editorService.app.stage.height
+                this._applicationService.app.stage.height
             );
 
             this._circle.y += this._offsetY;
@@ -145,7 +145,7 @@ export class CanvaElementResizer {
             CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.width,
               this._cael.parent?.innerBound.width ??
-                this._editorService.app.stage.width
+                this._applicationService.app.stage.width
             );
 
             this._circle.x += this._offsetX;
@@ -155,7 +155,7 @@ export class CanvaElementResizer {
             CanvaElementDimension.syncDimensionWithParentDimensionRef(
               parentCaelBound.height,
               this._cael.parent?.innerBound.height ??
-                this._editorService.app.stage.height
+                this._applicationService.app.stage.height
             );
 
             this._circle.y += this._offsetY;
