@@ -11,10 +11,10 @@ export class CElementToCreate {
   public paddings!: CElementIndents;
 
   constructor(
-    public x: number,
+    public x: CElementDimension<CElementDimensionExtendMeasurement>,
     public y: number,
-    public width: CElementDimension,
-    public height: CElementDimension,
+    public width: CElementDimension<CElementDimensionExtendMeasurement>,
+    public height: CElementDimension<CElementDimensionMeasurement>,
     margins?: CElementIndents,
     paddings?: CElementIndents,
     public id?: string
@@ -37,10 +37,10 @@ export class CElement extends CElementToCreate {
 
   constructor(
     public id: string,
-    x: number,
+    x: CElementDimension<CElementDimensionExtendMeasurement>,
     y: number,
-    width: CElementDimension,
-    height: CElementDimension,
+    width: CElementDimension<CElementDimensionExtendMeasurement>,
+    height: CElementDimension<CElementDimensionMeasurement>,
     margins: CElementIndents,
     paddings: CElementIndents
   ) {
@@ -66,10 +66,10 @@ export class CElement extends CElementToCreate {
 
 export class CElementTransformation {
   constructor(
-    public x?: number,
+    public x?: CElementDimension<CElementDimensionExtendMeasurement>,
     public y?: number,
-    public width?: CElementDimension,
-    public height?: CElementDimension,
+    public width?: CElementDimension<CElementDimensionExtendMeasurement>,
+    public height?: CElementDimension<CElementDimensionMeasurement>,
     public margins?: CElementIndent[],
     public paddings?: CElementIndent[],
     public align?: CElementLayoutAlignUpdate
@@ -90,14 +90,26 @@ export enum CElementDimensionMeasurement {
   Percent = 2,
 }
 
+export enum CElementLayoutGridDimensionMeasurement {
+  LayoutGrid = 10
+}
+
+export type CElementDimensionExtendMeasurement = CElementDimensionMeasurement | CElementLayoutGridDimensionMeasurement;
+
 export enum CElementDimensionAxis {
   Width = 1 << 1,
   Height = 2 << 2,
 }
 
-export class CElementDimension {
+export enum CElementPositionAxis {
+  X = 1 << 1,
+  Y = 2 << 2,
+}
+
+export class CElementDimension<TMeasurement extends CElementDimensionMeasurement | CElementDimensionExtendMeasurement> {
   constructor(
     public value: number,
-    public measurement: CElementDimensionMeasurement = CElementDimensionMeasurement.Px
-  ) {}
+    public measurement: TMeasurement = <TMeasurement><any>CElementDimensionMeasurement.Px
+  ) {              
+  }
 }

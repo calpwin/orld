@@ -8,15 +8,22 @@ import { CanvaElement } from "../features/ui-editor/canva-element/canva-element"
 import {
   CElementDimension,
   CElementDimensionAxis,
+  CElementDimensionExtendMeasurement,
   CElementDimensionMeasurement,
+  CElementLayoutGridDimensionMeasurement,
+  CElementPositionAxis,
 } from "../features/ui-editor/celement/celement";
 import { inject, injectable } from "inversify";
 import { ApplicationService } from "../features/application/application.service";
+import { EditorLayoutGridService } from "../features/ui-editor/editor/editor-layout-grid.service";
 
 @injectable()
 export class FlexboxAdapter {
   @inject(ApplicationService)
   private readonly _applicationService!: ApplicationService;
+
+  @inject(EditorLayoutGridService)
+  private readonly _editorLayoutGridService!: EditorLayoutGridService;
 
   constructor() {}
 
@@ -26,43 +33,44 @@ export class FlexboxAdapter {
   syncChildrenPosition(parent: CanvaElement, layoutAlign: CElementLayoutAlign) {
     if (layoutAlign.displayMode === LayoutDisplayMode.Absolute) return;
 
-    const children = parent.children;
+    const childrenForVerticalSync = parent.children;    
+    const childrenForHorizopntalSync = parent.children.filter(child => child.outerBound.width.measurement !== CElementLayoutGridDimensionMeasurement.LayoutGrid);
 
-    if (children.length == 0) return;
+    if (childrenForVerticalSync.length == 0) return;
 
     switch (layoutAlign.horizontal) {
       case LayoutAlign.AlignStart:
         this.toHorizontalLeftPosition(
           parent,
-          children,
+          childrenForHorizopntalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AlignSpaceBetween:
         this.toHorizontalSpaceBetweenPosition(
           parent,
-          children,
+          childrenForHorizopntalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AlignCenter:
         this.toHorizontalCenterPosition(
           parent,
-          children,
+          childrenForHorizopntalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AlignSpaceAround:
         this.toHorizontalSpaceAroundPosition(
           parent,
-          children,
+          childrenForHorizopntalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AliginEnd:
         this.toHorizontalRightPosition(
           parent,
-          children,
+          childrenForHorizopntalSync,
           layoutAlign.flexDirection
         );
         break;
@@ -78,33 +86,33 @@ export class FlexboxAdapter {
       case LayoutAlign.AlignStart:
         this.toVerticalBottomPosition(
           parent,
-          children,
+          childrenForVerticalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AlignSpaceBetween:
         this.toVerticalSpaceBetweenPosition(
           parent,
-          children,
+          childrenForVerticalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AlignCenter:
         this.toVerticalCenterPosition(
           parent,
-          children,
+          childrenForVerticalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AlignSpaceAround:
         this.toVerticalSpaceAroundPosition(
           parent,
-          children,
+          childrenForVerticalSync,
           layoutAlign.flexDirection
         );
         break;
       case LayoutAlign.AliginEnd:
-        this.toVerticalTopPosition(parent, children, layoutAlign.flexDirection);
+        this.toVerticalTopPosition(parent, childrenForVerticalSync, layoutAlign.flexDirection);
         break;
       default:
         throw Error(
@@ -123,7 +131,12 @@ export class FlexboxAdapter {
       const child = children[index];
 
       child.graphics.position.set(0, 0);
-      child.setTransformation(previousShift, child.outerPosition.y);
+      child.setTransformation(
+        new CElementDimension<CElementDimensionExtendMeasurement>(
+          previousShift
+        ),
+        child.outerPosition.y
+      );
 
       if (flexDirection === FlexDirection.Row) {
         previousShift += child.outerBound.totalWidthInPx;
@@ -152,7 +165,12 @@ export class FlexboxAdapter {
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      child.setTransformation(previousShift, child.outerPosition.y);
+      child.setTransformation(
+        new CElementDimension<CElementDimensionExtendMeasurement>(
+          previousShift
+        ),
+        child.outerPosition.y
+      );
 
       previousShift += margin + child.outerBound.totalWidthInPx;
     }
@@ -178,7 +196,12 @@ export class FlexboxAdapter {
           : (parent.innerBound.width - child.outerBound.totalWidthInPx) / 2;
 
       child.graphics.position.set(0, 0);
-      child.setTransformation(parent.innerPosition.x + currentX, child.outerPosition.y);
+      child.setTransformation(
+        new CElementDimension<CElementDimensionExtendMeasurement>(
+          parent.innerPosition.x + currentX
+        ),
+        child.outerPosition.y
+      );
 
       if (flexDirection === FlexDirection.Row) {
         currentX += child.outerBound.totalWidthInPx;
@@ -207,7 +230,12 @@ export class FlexboxAdapter {
     for (let index = 0; index < children.length; index++) {
       const child = children[index];
 
-      child.setTransformation(previousShift, child.outerPosition.y);
+      child.setTransformation(
+        new CElementDimension<CElementDimensionExtendMeasurement>(
+          previousShift
+        ),
+        child.outerPosition.y
+      );
 
       previousShift += margin + child.outerBound.totalWidthInPx;
     }
@@ -224,7 +252,9 @@ export class FlexboxAdapter {
 
       child.graphics.position.set(0, 0);
       child.setTransformation(
-        previousShift - child.outerBound.totalWidthInPx,
+        new CElementDimension<CElementDimensionExtendMeasurement>(
+          previousShift - child.outerBound.totalWidthInPx
+        ),
         child.outerPosition.y
       );
 
@@ -299,7 +329,10 @@ export class FlexboxAdapter {
           : (parent.innerBound.height - child.outerBound.totalHeihgtInPx) / 2;
 
       child.graphics.position.set(0, 0);
-      child.setTransformation(child.outerPosition.x, parent.innerPosition.y + currentY);
+      child.setTransformation(
+        child.outerPosition.x,
+        parent.innerPosition.y + currentY
+      );
 
       if (flexDirection === FlexDirection.Column) {
         currentY += child.outerBound.totalHeihgtInPx;
@@ -373,7 +406,7 @@ export class FlexboxAdapter {
   }
 
   /**
-   * Calculate current Canv Element dimension in Px, mostly need to convert from percent
+   * Calculate current Cael dimension in Px, mostly need to convert from percent or GreedColumns
    * @param dimension
    * @param axis
    * @param layoutAlign
@@ -381,7 +414,9 @@ export class FlexboxAdapter {
    * @returns
    */
   calculateCaelDimensionInPx(
-    dimension: CElementDimension,
+    dimension:
+      | CElementDimension<CElementDimensionExtendMeasurement>
+      | CElementDimension<CElementDimensionMeasurement>,
     axis: CElementDimensionAxis,
     layoutAlign: CElementLayoutAlign,
     parent?: CanvaElement
@@ -400,10 +435,49 @@ export class FlexboxAdapter {
 
     if (dimension.measurement === CElementDimensionMeasurement.Percent) {
       return parentDimValPx * (dimension.value / 100);
+    } else if (
+      dimension.measurement ===
+      CElementLayoutGridDimensionMeasurement.LayoutGrid
+    ) {
+      return this._editorLayoutGridService.calculateDimensionColumnsInPx(
+        dimension.value
+      );
     }
 
     throw Error(
       `Current dimension type ${dimension.measurement} is not suppported`
+    );
+  }
+
+  /**
+   * Calculate current Cael position in Px, mostly need to convert from percent or GreedColumns
+   * @param position
+   * @param axis
+   * @param layoutAlign
+   * @param parent
+   * @returns
+   */
+  calculateCaelPositionInPx(
+    position:
+      | CElementDimension<CElementDimensionExtendMeasurement>
+      | CElementDimension<CElementDimensionMeasurement>,
+    axis: CElementPositionAxis,
+    layoutAlign: CElementLayoutAlign,
+    parent: CanvaElement
+  ) {
+    if (position.measurement === CElementDimensionMeasurement.Px)
+      return position.value;
+
+    if (
+      position.measurement === CElementLayoutGridDimensionMeasurement.LayoutGrid
+    ) {
+      return parent.innerPosition.x + this._editorLayoutGridService.calculatePositionColumnsInPx(
+        position.value
+      );
+    }
+
+    throw Error(
+      `Current position type ${position.measurement} is not suppported`
     );
   }
 }

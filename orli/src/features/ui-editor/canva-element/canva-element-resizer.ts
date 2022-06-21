@@ -116,7 +116,7 @@ export class CanvaElementResizer {
 
         switch (this._direction) {
           case ResizerDirection.Left:
-            parentCaelPostion.x += this._offsetX;
+            parentCaelPostion.x.valueInPx += this._offsetX;
 
             parentCaelBound.width.valueInPx -= this._offsetX;
             

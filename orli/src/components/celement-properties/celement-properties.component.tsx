@@ -45,7 +45,9 @@ import {
 } from "../../features/ui-editor/canva-element/canva-element";
 import {
   CElementDimension,
+  CElementDimensionExtendMeasurement,
   CElementDimensionMeasurement,
+  CElementLayoutGridDimensionMeasurement,
   CElementTransformation,
 } from "../../features/ui-editor/celement/celement";
 import { CanvaElementDimension } from "../../features/ui-editor/canva-element/canva-element-dimension";
@@ -54,7 +56,10 @@ import { CElementPropertiesIndentsComponent } from "./celement-properties-indent
 
 class State {
   currentCaelId: string | undefined = undefined;
-  celPosition = new CanvaElementPosition(0, 0);
+  celPosition = new CanvaElementPosition(
+    new CanvaElementDimension<CElementDimensionExtendMeasurement>(0),
+    0
+  );
   celBound = new CanvaElementBound(
     new CanvaElementDimension(0),
     new CanvaElementDimension(0),
@@ -84,7 +89,20 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
             startAdornment={
               <InputAdornment position="start">x:</InputAdornment>
             }
-            value={Math.round(this.state.celPosition.x)}
+            endAdornment={
+              <InputAdornment position="end">
+                <span
+                  className="input-adorment adorment-x"
+                  onClick={() => this.toggleDimensionMeasurement("x")}
+                >
+                  {this.state.celPosition.x.measurement ===
+                  CElementDimensionMeasurement.Px
+                    ? "Px"
+                    : "Gc"}
+                </span>
+              </InputAdornment>
+            }
+            value={Math.round(this.state.celPosition.x.valueInPx)}
             onChange={(e) =>
               this.onCelementPositionChanged(Number.parseInt(e.target.value))
             }
@@ -122,6 +140,9 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
                   {this.state.celBound.width.measurement ===
                   CElementDimensionMeasurement.Px
                     ? "Px"
+                    : this.state.celBound.width.measurement ===
+                      CElementLayoutGridDimensionMeasurement.LayoutGrid
+                    ? "Gc"
                     : "%"}
                 </span>
               </InputAdornment>
@@ -350,10 +371,12 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
 
         {this.state.celSelected ? (
           <CElementPropertiesIndentsComponent
-            key={this.state.currentCaelId}
+            key={(this.state.currentCaelId ?? '') + this.state.celBound.width.measurement.toString()}
             indents={{
               margins: this.state.celBound.margins,
               paddings: this.state.celBound.paddings,
+              showMargins: this.state.celBound.width.measurement !== CElementLayoutGridDimensionMeasurement.LayoutGrid,
+              showPaddings: true
             }}
           />
         ) : undefined}
@@ -380,7 +403,14 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         this.setState({
           ...this.state,
           currentCaelId: newVal!.id,
-          celPosition: { x: newVal!.x, y: newVal!.y },
+          celPosition: {
+            x: new CanvaElementDimension<CElementDimensionExtendMeasurement>(
+              newVal!.x.value,
+              undefined,
+              newVal!.x.measurement
+            ),
+            y: newVal!.y,
+          },
           celBound: new CanvaElementBound(
             new CanvaElementDimension(
               newVal!.width.value,
@@ -417,7 +447,14 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           celStatePart = {
             ...celStatePart,
             currentCaelId: cel.id,
-            celPosition: { x: cel.x, y: cel.y },
+            celPosition: {
+              x: new CanvaElementDimension<CElementDimensionExtendMeasurement>(
+                cel.x.value,
+                undefined,
+                cel.x.measurement
+              ),
+              y: cel.y,
+            },
             celBound: new CanvaElementBound(
               new CanvaElementDimension(
                 cel.width.value,
@@ -529,26 +566,47 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     store.dispatch(
       celementTransformAction({
         celId: store.getState().editor.currentSelectedCElementId!,
-        transformation: new CElementTransformation(x, y, width, height),
+        transformation: new CElementTransformation(
+          x
+            ? new CElementDimension<CElementDimensionExtendMeasurement>(x)
+            : undefined,
+          y,
+          width,
+          height
+        ),
       })
     );
   };
 
-  private toggleDimensionMeasurement = (dimensionSide: "width" | "height") => {
+  private toggleDimensionMeasurement = (dimensionSide: "width" | "height" | "x") => {
+    const x =
+      dimensionSide === "x"
+        ? new CElementDimension<CElementDimensionExtendMeasurement>(
+            this.state.celPosition.x.value,
+            this.state.celPosition.x.measurement ===
+            CElementDimensionMeasurement.Px
+              ? CElementLayoutGridDimensionMeasurement.LayoutGrid
+              : CElementDimensionMeasurement.Px
+          )
+        : undefined;
+
     const width =
       dimensionSide === "width"
-        ? new CElementDimension(
+        ? new CElementDimension<CElementDimensionExtendMeasurement>(
             this.state.celBound.width.value,
             this.state.celBound.width.measurement ===
-            CElementDimensionMeasurement.Percent
-              ? CElementDimensionMeasurement.Px
-              : CElementDimensionMeasurement.Percent
+            CElementDimensionMeasurement.Px
+              ? CElementDimensionMeasurement.Percent
+              : this.state.celBound.width.measurement ===
+                CElementDimensionMeasurement.Percent
+              ? CElementLayoutGridDimensionMeasurement.LayoutGrid
+              : CElementDimensionMeasurement.Px
           )
         : undefined;
 
     const height =
       dimensionSide === "height"
-        ? new CElementDimension(
+        ? new CElementDimension<CElementDimensionMeasurement>(
             this.state.celBound.height.value,
             this.state.celBound.height.measurement ===
             CElementDimensionMeasurement.Percent
@@ -561,7 +619,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
       celementTransformAction({
         celId: store.getState().editor.currentSelectedCElementId!,
         transformation: new CElementTransformation(
-          undefined,
+          x,
           undefined,
           width,
           height
@@ -574,5 +632,5 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     const celId = this.state.currentCaelId!;
     store.dispatch(celementRemoveAction({ celId, withChildren: true }));
     store.dispatch(celementSelectAction({ celId: undefined }));
-  }
+  };
 }

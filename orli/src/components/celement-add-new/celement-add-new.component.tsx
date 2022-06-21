@@ -52,7 +52,7 @@ export class CElementAddNewComponent extends React.Component<{}, State> {
     store.dispatch(
       celementCreateAction({
         cel: new CElementToCreate(
-          0,
+          new CElementDimension(0),
           20,
           new CElementDimension(60),
           new CElementDimension(30)

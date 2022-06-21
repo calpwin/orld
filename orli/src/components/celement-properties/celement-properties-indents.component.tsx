@@ -22,6 +22,8 @@ import { CElementTransformation } from "../../features/ui-editor/celement/celeme
 class State {
   margins = new CElementIndents();
   paddings = new CElementIndents();
+  showMargins = true;
+  showPaddings = true;
 }
 
 export class CElementPropertiesIndentsComponent extends React.Component<
@@ -35,179 +37,187 @@ export class CElementPropertiesIndentsComponent extends React.Component<
   }
 
   render() {
+    const margins = (
+      <div className="indents indent-margins">
+        <MarginTwoToneIcon className="prefix" fontSize="small" />
+
+        <div className="inputs">
+          <Input
+            className="input indent-margin-top"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderTopIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.margins.top.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Top
+                ),
+                "margin"
+              )
+            }
+          />
+
+          <Input
+            className="input indent-margin-right"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderRightIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.margins.right.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Right
+                ),
+                "margin"
+              )
+            }
+          />
+
+          <Input
+            className="input indent-margin-bottom"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderBottomIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.margins.bottom.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Bottom
+                ),
+                "margin"
+              )
+            }
+          />
+
+          <Input
+            className="input indent-margin-left"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderLeftIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.margins.left.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Left
+                ),
+                "margin"
+              )
+            }
+          />
+        </div>
+      </div>
+    );
+
+    const paddings = (
+      <div className="indents indent-paddings">
+        <PaddingTwoToneIcon className="prefix" fontSize="small" />
+
+        <div className="inputs">
+          <Input
+            className="input indent-padding-top"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderTopIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.paddings.top.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Top
+                ),
+                "padding"
+              )
+            }
+          />
+
+          <Input
+            className="input indent-padding-right"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderRightIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.paddings.right.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Right
+                ),
+                "padding"
+              )
+            }
+          />
+
+          <Input
+            className="input indent-padding-bottom"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderBottomIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.paddings.bottom.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Bottom
+                ),
+                "padding"
+              )
+            }
+          />
+
+          <Input
+            className="input indent-padding-left"
+            type="number"
+            startAdornment={
+              <InputAdornment position="start">
+                <BorderLeftIcon fontSize="small" />
+              </InputAdornment>
+            }
+            value={Math.round(this.state.paddings.left.value)}
+            onChange={(e) =>
+              this.onCelementIndentChanged(
+                new CElementIndent(
+                  Number.parseInt(e.target.value),
+                  CElementIndentDirection.Left
+                ),
+                "padding"
+              )
+            }
+          />
+        </div>
+      </div>
+    );
+
     return (
       <div id="properties-indent-wrapper">
-        <div className="indents indent-margins">
-          <MarginTwoToneIcon className="prefix" fontSize="small" />
+        {this.state.showMargins && margins}
 
-          <div className="inputs">
-            <Input
-              className="input indent-margin-top"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderTopIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.margins.top.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Top
-                  ),
-                  "margin"
-                )
-              }
-            />
-
-            <Input
-              className="input indent-margin-right"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderRightIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.margins.right.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Right
-                  ),
-                  "margin"
-                )
-              }
-            />
-
-            <Input
-              className="input indent-margin-bottom"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderBottomIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.margins.bottom.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Bottom
-                  ),
-                  "margin"
-                )
-              }
-            />
-
-            <Input
-              className="input indent-margin-left"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderLeftIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.margins.left.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Left
-                  ),
-                  "margin"
-                )
-              }
-            />
-          </div>
-        </div>
-
-        <div className="indents indent-paddings">
-          <PaddingTwoToneIcon className="prefix" fontSize="small" />
-
-          <div className="inputs">
-            <Input
-              className="input indent-padding-top"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderTopIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.paddings.top.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Top
-                  ),
-                  "padding"
-                )
-              }
-            />
-
-            <Input
-              className="input indent-padding-right"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderRightIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.paddings.right.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Right
-                  ),
-                  "padding"
-                )
-              }
-            />
-
-            <Input
-              className="input indent-padding-bottom"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderBottomIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.paddings.bottom.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Bottom
-                  ),
-                  "padding"
-                )
-              }
-            />
-
-            <Input
-              className="input indent-padding-left"
-              type="number"
-              startAdornment={
-                <InputAdornment position="start">
-                  <BorderLeftIcon fontSize="small" />
-                </InputAdornment>
-              }
-              value={Math.round(this.state.paddings.left.value)}
-              onChange={(e) =>
-                this.onCelementIndentChanged(
-                  new CElementIndent(
-                    Number.parseInt(e.target.value),
-                    CElementIndentDirection.Left
-                  ),
-                  "padding"
-                )
-              }
-            />
-          </div>
-        </div>
+        {this.state.showPaddings && paddings}
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { createAction } from "@reduxjs/toolkit";
-import { CElement, CElementToCreate, CElementTransformation } from "./celement";
+import { CElement, CElementDimension, CElementDimensionExtendMeasurement, CElementToCreate, CElementTransformation } from "./celement";
 import { CElementLayoutAlignUpdate } from "./celement-layout";
 
 export const celementCreateAction = createAction<{ cel: CElementToCreate, toParentCelId?: string }>(
@@ -22,7 +22,7 @@ export const celementSelectAction = createAction<{ celId: string | undefined }>(
  * ! Quiet -> no @see lastCElementTransformed will be set */
 export const celementChangePositionQuietAction = createAction<{
   celId: string;
-  position: { x: number; y: number };
+  position: { x: CElementDimension<CElementDimensionExtendMeasurement>; y: number };
 }>("celement/changePosition");
 
 /** Set cel trasformation (width, height, margins, paddings, align) */

@@ -13,7 +13,9 @@ import {
   CElement,
   CElementDimension,
   CElementDimensionAxis,
+  CElementDimensionExtendMeasurement,
   CElementDimensionMeasurement,
+  CElementPositionAxis,
   CElementToCreate,
 } from "../celement/celement";
 import { CanvaElementResizer, ResizerDirection } from "./canva-element-resizer";
@@ -46,10 +48,10 @@ export class CanvaElement {
   private _rectMoving = false;
   private _rectangleFill!: number;
 
-  private _outerX!: number;
+  private _outerX!: CanvaElementDimension<CElementDimensionExtendMeasurement>;
   private _outerY!: number;
-  private _outerWidth!: CanvaElementDimension;
-  private _outerHeight!: CanvaElementDimension;
+  private _outerWidth!: CanvaElementDimension<CElementDimensionExtendMeasurement>;
+  private _outerHeight!: CanvaElementDimension<CElementDimensionMeasurement>;
   private readonly _margins = new CElementIndents();
   // new CElementIndent(5, CElementMarginDirection.Top),
   // new CElementIndent(15, CElementMarginDirection.Right),
@@ -104,8 +106,8 @@ export class CanvaElement {
 
   /** Position without margings and padding,
    *  where children Cael insert */
-  get innerPosition() {
-    return new CanvaElementPosition(this._innerX, this._innerY);
+  get innerPosition(): { x: number; y: number } {
+    return { x: this._innerX, y: this._innerY };
   }
 
   get parent() {
@@ -192,14 +194,23 @@ export class CanvaElement {
     Set element transformation
   */
   setTransformation(
-    x?: number,
+    x?: CElementDimension<CElementDimensionExtendMeasurement>,
     y?: number,
-    width?: CElementDimension,
-    height?: CElementDimension,
+    width?: CElementDimension<CElementDimensionExtendMeasurement>,
+    height?: CElementDimension<CElementDimensionMeasurement>,
     margings?: CElementIndent[],
     paddings?: CElementIndent[]
   ) {
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+    const xInPx =
+      x && !this.isRootCael
+        ? this._flexboxAdapter.calculateCaelPositionInPx(
+            x,
+            CElementPositionAxis.X,
+            layoutAlign,
+            this._parent!
+          )
+        : null;
     const widthInPx = width
       ? this._flexboxAdapter.calculateCaelDimensionInPx(
           width,
@@ -222,7 +233,10 @@ export class CanvaElement {
     !width && (changedAxis &= ~CElementDimensionAxis.Width);
     !height && (changedAxis &= ~CElementDimensionAxis.Height);
 
-    this._outerX = x ?? this._outerX;
+    this._outerX =
+      xInPx !== null && xInPx !== undefined
+        ? new CanvaElementDimension(x!.value, xInPx, x!.measurement)
+        : this._outerX;
     this._outerY = y ?? this._outerY;
     this._outerWidth = widthInPx
       ? new CanvaElementDimension(width!.value, widthInPx, width!.measurement)
@@ -275,13 +289,13 @@ export class CanvaElement {
     }
 
     this._rectangle.drawRect(
-      this._outerX + this._margins.left.value,
+      this._outerX.valueInPx + this._margins.left.value,
       this._outerY + this._margins.top.value,
       this._outerWidth.valueInPx,
       this._outerHeight.valueInPx
     );
     this._rectangle.hitArea = new Rectangle(
-      this._outerX - 10,
+      this._outerX.valueInPx - 10,
       this._outerY - 10,
       this._outerWidth.valueInPx + 20,
       this._outerHeight.valueInPx + 20
@@ -311,7 +325,7 @@ export class CanvaElement {
 
     if (this._margins.top.isSet)
       this._rectangle.drawRect(
-        this._outerX,
+        this._outerX.valueInPx,
         this._outerY,
         this.outerBound.totalWidthInPx,
         this._margins.top.value
@@ -319,7 +333,9 @@ export class CanvaElement {
 
     if (this._margins.right.isSet)
       this._rectangle.drawRect(
-        this._outerX + this._margins.left.value + this._outerWidth.valueInPx,
+        this._outerX.valueInPx +
+          this._margins.left.value +
+          this._outerWidth.valueInPx,
         this._outerY,
         this._margins.right.value,
         this.outerBound.totalHeihgtInPx
@@ -327,7 +343,7 @@ export class CanvaElement {
 
     if (this._margins.bottom.isSet)
       this._rectangle.drawRect(
-        this._outerX,
+        this._outerX.valueInPx,
         this._outerY + this._margins.top.value + this._outerHeight.valueInPx,
         this.outerBound.totalWidthInPx,
         this._margins.bottom.value
@@ -335,7 +351,7 @@ export class CanvaElement {
 
     if (this._margins.left.isSet)
       this._rectangle.drawRect(
-        this._outerX,
+        this._outerX.valueInPx,
         this._outerY,
         this._margins.left.value,
         this.outerBound.totalHeihgtInPx
@@ -349,7 +365,7 @@ export class CanvaElement {
 
     if (this._paddings.top.isSet)
       this._rectangle.drawRect(
-        this._outerX + this._margins.left.value,
+        this._outerX.valueInPx + this._margins.left.value,
         this._outerY + this._margins.top.value,
         this.outerBound.width.valueInPx,
         this._paddings.top.value
@@ -357,7 +373,7 @@ export class CanvaElement {
 
     if (this._paddings.right.isSet)
       this._rectangle.drawRect(
-        this._outerX +
+        this._outerX.valueInPx +
           this._margins.left.value +
           this._outerWidth.valueInPx -
           this._paddings.right.value,
@@ -368,7 +384,7 @@ export class CanvaElement {
 
     if (this._paddings.bottom.isSet)
       this._rectangle.drawRect(
-        this._outerX + this._margins.left.value,
+        this._outerX.valueInPx + this._margins.left.value,
         this._outerY +
           this._margins.top.value +
           this._outerHeight.valueInPx -
@@ -379,7 +395,7 @@ export class CanvaElement {
 
     if (this._paddings.left.isSet)
       this._rectangle.drawRect(
-        this._outerX + this._margins.left.value,
+        this._outerX.valueInPx + this._margins.left.value,
         this._outerY + this._margins.top.value,
         this._paddings.left.value,
         this.outerBound.height.valueInPx
@@ -389,24 +405,36 @@ export class CanvaElement {
   }
 
   private initialize(celToCreate: CElementToCreate, fill: number) {
-    const layoutAling = new CElementLayoutAlign();
+    const layoutAlign = new CElementLayoutAlign();
 
+    const xInPx = !this.isRootCael
+      ? this._flexboxAdapter.calculateCaelPositionInPx(
+          celToCreate.x,
+          CElementPositionAxis.X,
+          layoutAlign,
+          this._parent!
+        )
+      : undefined;
     const widthInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
       celToCreate.width,
       CElementDimensionAxis.Width,
-      layoutAling,
+      layoutAlign,
       undefined
     );
     const heightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
       celToCreate.height,
       CElementDimensionAxis.Height,
-      layoutAling,
+      layoutAlign,
       undefined
     ); // TODO set parent
 
     this._rectangle = new Graphics();
     this._rectangle.interactive = true;
-    this._outerX = celToCreate.x;
+    this._outerX = new CanvaElementDimension(
+      celToCreate.x.value,
+      xInPx,
+      celToCreate.x.measurement
+    );
     this._outerY = celToCreate.y;
     this._outerWidth = new CanvaElementDimension(
       celToCreate.width.value,
@@ -419,14 +447,12 @@ export class CanvaElement {
       celToCreate.height.measurement
     );
 
-    celToCreate.margins.all.forEach(margin => this._margins.set(margin));
-    celToCreate.paddings.all.forEach(padding => this._paddings.set(padding));
+    celToCreate.margins.all.forEach((margin) => this._margins.set(margin));
+    celToCreate.paddings.all.forEach((padding) => this._paddings.set(padding));
 
     this._rectangleFill = fill;
 
-    this.synchronizeInnerBoundAndPosition();
-
-    this.redrawSelf();
+    this.synchronizeInnerBoundAndPosition();    
 
     this._rectangle.on("mouseup", (event) => {
       this._resizers.stopMoving();
@@ -441,6 +467,8 @@ export class CanvaElement {
     store.dispatch(
       celementAddedAction({ cel, toParentCelId: this.parent?.id })
     );
+
+    this.redraw();
 
     return this._rectangle;
   }
@@ -535,7 +563,9 @@ export class CanvaElement {
   /** Synchronize inner x, y, width, height with outer and margins, paddings */
   private synchronizeInnerBoundAndPosition() {
     this._innerX =
-      this._outerX + this._margins.left.value + this._paddings.left.value;
+      this._outerX.valueInPx +
+      this._margins.left.value +
+      this._paddings.left.value;
     this._innerY =
       this._outerY + this._margins.top.value + this._paddings.top.value;
 
@@ -630,7 +660,7 @@ export class CanvaElement {
 
       this._rectangle.x = 0;
       this._rectangle.y = 0;
-      this._outerX += marginX;
+      this._outerX.valueInPx += marginX;
       this._outerY += marginY;
 
       this.redraw();
@@ -652,12 +682,15 @@ export class CanvaElement {
 }
 
 export class CanvaElementPosition {
-  constructor(public x: number, public y: number) {}
+  constructor(
+    public x: CanvaElementDimension<CElementDimensionExtendMeasurement>,
+    public y: number
+  ) {}
 }
 
 export class CanvaElementBound {
-  private _width: CanvaElementDimension;
-  private _height: CanvaElementDimension;
+  private _width: CanvaElementDimension<CElementDimensionExtendMeasurement>;
+  private _height: CanvaElementDimension<CElementDimensionMeasurement>;
   private _margins: CElementIndents;
   private _paddings: CElementIndents;
 
@@ -680,7 +713,7 @@ export class CanvaElementBound {
     return this._width;
   }
 
-  set width(value: CanvaElementDimension) {
+  set width(value: CanvaElementDimension<CElementDimensionExtendMeasurement>) {
     this._width = value;
 
     this.syncTotalDimensions();
@@ -690,7 +723,7 @@ export class CanvaElementBound {
     return this._height;
   }
 
-  set height(value: CanvaElementDimension) {
+  set height(value: CanvaElementDimension<CElementDimensionMeasurement>) {
     this._height = value;
 
     this.syncTotalDimensions();
@@ -719,8 +752,8 @@ export class CanvaElementBound {
   }
 
   constructor(
-    width: CanvaElementDimension,
-    height: CanvaElementDimension,
+    width: CanvaElementDimension<CElementDimensionExtendMeasurement>,
+    height: CanvaElementDimension<CElementDimensionMeasurement>,
     margins?: CElementIndents,
     paddings?: CElementIndents
   ) {

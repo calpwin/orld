@@ -12,6 +12,7 @@ import { CanvaElement } from "../features/ui-editor/canva-element/canva-element"
 import {
   CElement,
   CElementDimension,
+  CElementDimensionExtendMeasurement,
   CElementToCreate,
 } from "../features/ui-editor/celement/celement";
 import { EditorLayoutGridService } from "../features/ui-editor/editor/editor-layout-grid.service";
@@ -86,7 +87,7 @@ export class EditorService {
         ? ({ ...rootCel } as CElementToCreate)
         : undefined ??
             new CElementToCreate(
-              0,
+              new CElementDimension<CElementDimensionExtendMeasurement>(0),
               0,
               new CElementDimension(this._editorHel.clientWidth),
               new CElementDimension(this._editorHel.clientHeight)
@@ -94,6 +95,8 @@ export class EditorService {
       media
     );
     this._applicationService.rootCael = newRootCael;
+
+    this._editorLayoutGridService.recreateLayoutGrid(media);
 
     // Recreate children cels
     // Recreate in order from parent to children,
@@ -110,9 +113,7 @@ export class EditorService {
       };
 
       recreateCels(rootCel.childrenCelIds);
-    }
-
-    this._editorLayoutGridService.recreateLayoutGrid(media);
+    }    
   }
 
   private bindEvents() {
@@ -131,7 +132,7 @@ export class EditorService {
     media: EditorMediaType
   ) {
     let container: CanvaElement;
-    celToCreate.x = 0;
+    celToCreate.x.value = 0;
     celToCreate.y = 0;
     celToCreate.width = new CElementDimension(this._editorHel.clientWidth);
     celToCreate.height = new CElementDimension(this._editorHel.clientHeight);
@@ -147,22 +148,22 @@ export class EditorService {
         break;
       case EditorMediaType.Phone:
         celToCreate.width = new CElementDimension(480);
-        celToCreate.x = centerXPosition(celToCreate.width.value);
+        celToCreate.x.value = centerXPosition(celToCreate.width.value);
         container = this._caelService.createCael(celToCreate);
         break;
       case EditorMediaType.Tablet:
         celToCreate.width = new CElementDimension(768);
-        celToCreate.x = centerXPosition(celToCreate.width.value);
+        celToCreate.x.value = centerXPosition(celToCreate.width.value);
         container = this._caelService.createCael(celToCreate);
         break;
       case EditorMediaType.Laptop:
         celToCreate.width = new CElementDimension(1024);
-        celToCreate.x = centerXPosition(celToCreate.width.value);
+        celToCreate.x.value = centerXPosition(celToCreate.width.value);
         container = this._caelService.createCael(celToCreate);
         break;
       case EditorMediaType.Desktop:
         celToCreate.width = new CElementDimension(1200);
-        celToCreate.x = centerXPosition(celToCreate.width.value);
+        celToCreate.x.value = centerXPosition(celToCreate.width.value);
         container = this._caelService.createCael(celToCreate);
         break;
       default:
