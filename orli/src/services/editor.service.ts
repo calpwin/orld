@@ -63,9 +63,8 @@ export class EditorService {
    * Will be recreated with all current media cels
    */
   recreateRootCael(media: EditorMediaType) {
-    const cels = HashHelpers.toEntries(store.getState().editor.celements).map(
-      (x) => x[1]
-    );
+    const celsHash = store.getState().editor.celements;
+    const cels = HashHelpers.toEntries(celsHash).map((x) => x[1]);
     let rootCel = cels.find((x) => CElement.isRoot(x));
 
     if (cels.length > 0) {
@@ -92,50 +91,28 @@ export class EditorService {
       media
     );
 
-    // Recreate all elements except root container
-    this._caelService.recreateFromCels(
-      cels
-        .filter((x) => x.id !== rootCel?.id ?? newRootCael.id)
-        .sort((a, b) => (a > b ? 1 : -1))
-    );
+    // Recreate children cels
+    // Recreate in order from parent to children,
+    // to ensure that the parent element was created when child is created
+    if (rootCel) {
+      const recreateCels = (_celIds: string[]) => {
+        if (_celIds.length === 0) return;
 
-    // console.log(this._applicationService.app.stage.children);
+        const _cels = _celIds.map(celId => celsHash[celId]);
 
-    // console.log(store.getState().editor.celements);
+        this._caelService.recreateFromCels(_cels);
 
-    // store.dispatch(
-    //   celementCreateAction({
-    //     cel: new CElementToCreate(
-    //       0,
-    //       20,
-    //       new CElementDimension(60),
-    //       new CElementDimension(30)
-    //     ),
-    //     toParentCelId: container.id,
-    //   })
+        _cels.forEach((_cel) => recreateCels(_cel.childrenCelIds));
+      };
+
+      recreateCels(rootCel.childrenCelIds);
+    }
+    // // Recreate all elements except root container
+    // this._caelService.recreateFromCels(
+    //   cels
+    //     .filter((x) => x.id !== rootCel?.id ?? newRootCael.id)
+    //     .sort((a, b) => (a > b ? 1 : -1))
     // );
-
-    // store.dispatch(
-    //   celementCreateAction({
-    //     cel: new CElementToCreate(
-    //       0,
-    //       50,
-    //       new CElementDimension(60),
-    //       new CElementDimension(30)
-    //     ),
-    //     toParentCelId: container.id,
-    //   })
-    // );
-
-    // setTimeout(() => {
-
-    // if (cels.length > 0) {
-    //   console.log(cels);
-    // //   this._caelService.recreateFromCels(cels.sort((a, b) => (a > b ? 1 : -1)));
-    // }
-
-    //   console.log('recreated');
-    // }, 3000);
   }
 
   private bindEvents() {
