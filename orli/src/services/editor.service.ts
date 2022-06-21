@@ -14,7 +14,7 @@ import {
   CElementDimension,
   CElementToCreate,
 } from "../features/ui-editor/celement/celement";
-import { Graphics } from "pixi.js";
+import { EditorLayoutGridService } from "../features/ui-editor/editor/editor-layout-grid.service";
 
 @injectable()
 export class EditorService {
@@ -23,6 +23,9 @@ export class EditorService {
 
   @inject(CanvaElementService)
   private readonly _caelService!: CanvaElementService;
+
+  @inject(EditorLayoutGridService)
+  private readonly _editorLayoutGridService!: EditorLayoutGridService;
 
   // Editor canva Html Element
   private _editorHel!: HTMLElement;
@@ -90,6 +93,7 @@ export class EditorService {
             ),
       media
     );
+    this._applicationService.rootCael = newRootCael;
 
     // Recreate children cels
     // Recreate in order from parent to children,
@@ -98,7 +102,7 @@ export class EditorService {
       const recreateCels = (_celIds: string[]) => {
         if (_celIds.length === 0) return;
 
-        const _cels = _celIds.map(celId => celsHash[celId]);
+        const _cels = _celIds.map((celId) => celsHash[celId]);
 
         this._caelService.recreateFromCels(_cels);
 
@@ -107,12 +111,8 @@ export class EditorService {
 
       recreateCels(rootCel.childrenCelIds);
     }
-    // // Recreate all elements except root container
-    // this._caelService.recreateFromCels(
-    //   cels
-    //     .filter((x) => x.id !== rootCel?.id ?? newRootCael.id)
-    //     .sort((a, b) => (a > b ? 1 : -1))
-    // );
+
+    this._editorLayoutGridService.recreateLayoutGrid(media);
   }
 
   private bindEvents() {
