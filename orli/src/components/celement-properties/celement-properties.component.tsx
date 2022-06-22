@@ -91,10 +91,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
             }
             endAdornment={
               <InputAdornment position="end">
-                <span
-                  className="input-adorment adorment-x"
-                  onClick={() => this.toggleDimensionMeasurement("x")}
-                >
+                <span className="input-adorment adorment-x">
                   {this.state.celPosition.x.measurement ===
                   CElementDimensionMeasurement.Px
                     ? "Px"
@@ -113,6 +110,11 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
             type="number"
             startAdornment={
               <InputAdornment position="start">y:</InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <span className="input-adorment adorment-y">Px</span>
+              </InputAdornment>
             }
             value={Math.round(this.state.celPosition.y)}
             onChange={(e) =>
@@ -371,12 +373,17 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
 
         {this.state.celSelected ? (
           <CElementPropertiesIndentsComponent
-            key={(this.state.currentCaelId ?? '') + this.state.celBound.width.measurement.toString()}
+            key={
+              (this.state.currentCaelId ?? "") +
+              this.state.celBound.width.measurement.toString()
+            }
             indents={{
               margins: this.state.celBound.margins,
               paddings: this.state.celBound.paddings,
-              showMargins: this.state.celBound.width.measurement !== CElementLayoutGridDimensionMeasurement.LayoutGrid,
-              showPaddings: true
+              showMargins:
+                this.state.celBound.width.measurement !==
+                CElementLayoutGridDimensionMeasurement.LayoutGrid,
+              showPaddings: true,
             }}
           />
         ) : undefined}
@@ -568,7 +575,10 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         celId: store.getState().editor.currentSelectedCElementId!,
         transformation: new CElementTransformation(
           x
-            ? new CElementDimension<CElementDimensionExtendMeasurement>(x)
+            ? new CElementDimension<CElementDimensionExtendMeasurement>(
+                x,
+                this.state.celPosition.x.measurement
+              )
             : undefined,
           y,
           width,
@@ -578,17 +588,19 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     );
   };
 
-  private toggleDimensionMeasurement = (dimensionSide: "width" | "height" | "x") => {
-    const x =
-      dimensionSide === "x"
-        ? new CElementDimension<CElementDimensionExtendMeasurement>(
-            this.state.celPosition.x.value,
-            this.state.celPosition.x.measurement ===
-            CElementDimensionMeasurement.Px
-              ? CElementLayoutGridDimensionMeasurement.LayoutGrid
-              : CElementDimensionMeasurement.Px
-          )
-        : undefined;
+  private toggleDimensionMeasurement = (
+    dimensionSide: "width" | "height" | "x"
+  ) => {
+    // const x =
+    //   dimensionSide === "x"
+    //     ? new CElementDimension<CElementDimensionExtendMeasurement>(
+    //         this.state.celPosition.x.value,
+    //         this.state.celPosition.x.measurement ===
+    //         CElementDimensionMeasurement.Px
+    //           ? CElementLayoutGridDimensionMeasurement.LayoutGrid
+    //           : CElementDimensionMeasurement.Px
+    //       )
+    //     : undefined;
 
     const width =
       dimensionSide === "width"
@@ -604,6 +616,24 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           )
         : undefined;
 
+    let x = undefined;
+    if (dimensionSide === "width") {
+      if (
+        width!.measurement === CElementLayoutGridDimensionMeasurement.LayoutGrid
+      ) {
+        x = new CElementDimension<CElementDimensionExtendMeasurement>(
+          0,
+          CElementLayoutGridDimensionMeasurement.LayoutGrid
+        );
+        // When toggle LayoutGrid->Px x dimension should be cleared
+      } else if (width!.measurement === CElementDimensionMeasurement.Px) {
+        x = new CElementDimension<CElementDimensionExtendMeasurement>(
+          0,
+          CElementDimensionMeasurement.Px
+        );
+      }
+    }
+
     const height =
       dimensionSide === "height"
         ? new CElementDimension<CElementDimensionMeasurement>(
@@ -618,12 +648,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
     store.dispatch(
       celementTransformAction({
         celId: store.getState().editor.currentSelectedCElementId!,
-        transformation: new CElementTransformation(
-          x,
-          undefined,
-          width,
-          height
-        ),
+        transformation: new CElementTransformation(x, undefined, width, height),
       })
     );
   };

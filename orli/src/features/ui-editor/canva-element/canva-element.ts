@@ -15,6 +15,7 @@ import {
   CElementDimensionAxis,
   CElementDimensionExtendMeasurement,
   CElementDimensionMeasurement,
+  CElementLayoutGridDimensionMeasurement,
   CElementPositionAxis,
   CElementToCreate,
 } from "../celement/celement";
@@ -137,13 +138,7 @@ export class CanvaElement {
   set isSelected(value: boolean) {
     this._isSelected = value;
 
-    if (this.isRootCael) return;
-
-    if (this._isSelected) {
-      this.addResizers();
-    } else {
-      this.removeResizers();
-    }
+    this.synchronizeResizers();
 
     this.redrawSelf();
   }
@@ -265,7 +260,7 @@ export class CanvaElement {
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
 
     this.redrawSelf();
-    this._resizers.updateResizeresPosition(this.outerPosition, this.outerBound);
+    // this._resizers.updateResizeresPosition(this.outerPosition, this.outerBound);
 
     // disable movaeble for children if parent container not in Absolute display mode
     this._children.forEach(
@@ -452,7 +447,7 @@ export class CanvaElement {
 
     this._rectangleFill = fill;
 
-    this.synchronizeInnerBoundAndPosition();    
+    this.synchronizeInnerBoundAndPosition();
 
     this._rectangle.on("mouseup", (event) => {
       this._resizers.stopMoving();
@@ -560,6 +555,25 @@ export class CanvaElement {
     }
   }
 
+  /** Synchronize resizers with Cael state. Its displaying eth */
+  private synchronizeResizers() {
+    // No resizers for root Cael
+    if (this.isRootCael) return;
+
+    this.removeResizers();
+
+    if (this._isSelected) {
+      if (
+        this._outerWidth.measurement ===
+        CElementLayoutGridDimensionMeasurement.LayoutGrid
+      ) {
+        this.addResizers([ResizerDirection.Top, ResizerDirection.Bottom]);
+      } else {
+        this.addResizers();
+      }
+    }
+  }
+
   /** Synchronize inner x, y, width, height with outer and margins, paddings */
   private synchronizeInnerBoundAndPosition() {
     this._innerX =
@@ -578,20 +592,23 @@ export class CanvaElement {
       (this._paddings.top.value + this._paddings.bottom.value);
   }
 
-  private addResizers() {
-    [
-      new CanvaElementResizer(ResizerDirection.Left, this),
-      new CanvaElementResizer(ResizerDirection.Top, this),
-      new CanvaElementResizer(ResizerDirection.Right, this),
-      new CanvaElementResizer(ResizerDirection.Bottom, this),
-    ].forEach((x) => {
-      this._rectangle.addChild(x.circle);
-      this._resizers.set(x.direction, x);
-    });
+  private addResizers(
+    directions: ResizerDirection[] = [
+      ResizerDirection.Left,
+      ResizerDirection.Top,
+      ResizerDirection.Right,
+      ResizerDirection.Bottom,
+    ]
+  ) {
+    directions
+      .map((x) => new CanvaElementResizer(x, this))
+      .forEach((x) => {
+        this._rectangle.addChild(x.circle);
+        this._resizers.set(x.direction, x);
+      });
   }
 
   private removeResizers() {
-    // this._rectangle.removeChildren();
     this._resizers.forEach((x) => {
       this._rectangle.removeChild(x.circle);
     });
