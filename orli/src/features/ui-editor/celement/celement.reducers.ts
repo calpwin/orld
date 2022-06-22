@@ -51,20 +51,22 @@ export const celementReducerMapBuilder = (
     const cel = state.celements[action.payload.celId];
 
     let entries = HashHelpers.toEntries(state.celements);
+    // let newEntries = entries;
 
     const removeOne = (cel: CElement) => {
       entries = entries.filter(
-        (x) => x[1].id !== cel.id && x[1].id !== cel.parentCelId
+        (x) => x[1].id !== cel.id
       );
 
       if (cel.parentCelId) {
-        let parentCel = entries.find((x) => x[0] === cel.parentCelId)?.[1];
+        let parentCel = entries.find((x) => x[0] === cel.parentCelId)?.[1];        
 
-        if (parentCel) {
+        if (parentCel) {          
           parentCel = {...state.celements[cel.parentCelId]!}
           parentCel.childrenCelIds = parentCel.childrenCelIds.filter(
-            (celId) => celId === cel.id
+            (celId) => celId !== cel.id
           );
+          entries = entries.filter(x => x[1].id !== cel.parentCelId);
           entries.push([parentCel.id, parentCel]);
         }
       }
@@ -125,8 +127,10 @@ export const celementReducerMapBuilder = (
         action.payload.transformation.width,
         action.payload.transformation.height,
         action.payload.transformation.margins,
-        action.payload.transformation.paddings
+        action.payload.transformation.paddings,
+        undefined        
       ),
+      needChildrenToParentSync: action.payload.needChildrenToParentSync      
     };
   });
 
@@ -164,6 +168,7 @@ export const celementReducerMapBuilder = (
         undefined,
         action.payload.layoutAlign
       ),
+      needChildrenToParentSync: action.payload.needChildrenToParentSync
     };
   });
 };

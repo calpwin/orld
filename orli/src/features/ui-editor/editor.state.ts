@@ -26,7 +26,7 @@ export const editorInitialState = {
   lastEditorMouseMove: { x: 0, y: 0 },
   lastCElementChanged: <CElement | undefined>undefined,
   lastCElementTransformed: <
-    { celId: string; transformation: CElementTransformation } | undefined
+    { celId: string; transformation: CElementTransformation; needChildrenToParentSync: boolean } | undefined
   >undefined,
 
   editorMedia: EditorMediaType.Default

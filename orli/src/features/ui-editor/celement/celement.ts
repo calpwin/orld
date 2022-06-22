@@ -72,7 +72,7 @@ export class CElementTransformation {
     public height?: CElementDimension<CElementDimensionMeasurement>,
     public margins?: CElementIndent[],
     public paddings?: CElementIndent[],
-    public align?: CElementLayoutAlignUpdate
+    public align?: CElementLayoutAlignUpdate    
   ) {}
 
   public isEmpty = () =>

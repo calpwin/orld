@@ -64,10 +64,10 @@ export class App extends React.Component<{}, {}> {
       currentSelectedCelementSelector(store.getState().editor)
     );
     store.subscribe(
-      wSelectedCel((newId, oldId) => {
+      wSelectedCel((newId, oldId) => {        
         if (oldId) {
-          const cel = this._cElementService.getCael(oldId)!;
-          cel.isSelected = false;
+          const oldCel = this._cElementService.getCael(oldId);
+          oldCel && (oldCel.isSelected = false);
         }
 
         if (!newId) return;

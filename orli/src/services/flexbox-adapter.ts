@@ -33,8 +33,12 @@ export class FlexboxAdapter {
   syncChildrenPosition(parent: CanvaElement, layoutAlign: CElementLayoutAlign) {
     if (layoutAlign.displayMode === LayoutDisplayMode.Absolute) return;
 
-    const childrenForVerticalSync = parent.children;    
-    const childrenForHorizopntalSync = parent.children.filter(child => child.outerBound.width.measurement !== CElementLayoutGridDimensionMeasurement.LayoutGrid);
+    const childrenForVerticalSync = parent.children;
+    const childrenForHorizopntalSync = parent.children.filter(
+      (child) =>
+        child.outerBound.width.measurement !==
+        CElementLayoutGridDimensionMeasurement.LayoutGrid
+    );
 
     if (childrenForVerticalSync.length == 0) return;
 
@@ -112,7 +116,11 @@ export class FlexboxAdapter {
         );
         break;
       case LayoutAlign.AliginEnd:
-        this.toVerticalTopPosition(parent, childrenForVerticalSync, layoutAlign.flexDirection);
+        this.toVerticalTopPosition(
+          parent,
+          childrenForVerticalSync,
+          layoutAlign.flexDirection
+        );
         break;
       default:
         throw Error(
@@ -135,7 +143,7 @@ export class FlexboxAdapter {
         new CElementDimension<CElementDimensionExtendMeasurement>(
           previousShift
         ),
-        child.outerPosition.y
+        child.outerPosition.y 
       );
 
       if (flexDirection === FlexDirection.Row) {
@@ -411,6 +419,8 @@ export class FlexboxAdapter {
    * @param axis
    * @param layoutAlign
    * @param parent
+   * @param parentLayoutAlign
+   * @param otherChildrenCaels Parent children except current one
    * @returns
    */
   calculateCaelDimensionInPx(
@@ -419,7 +429,9 @@ export class FlexboxAdapter {
       | CElementDimension<CElementDimensionMeasurement>,
     axis: CElementDimensionAxis,
     layoutAlign: CElementLayoutAlign,
-    parent?: CanvaElement
+    parent?: CanvaElement,
+    parentLayoutAlign?: CElementLayoutAlign,
+    otherChildrenCaels?: CanvaElement[]
   ) {
     if (dimension.measurement === CElementDimensionMeasurement.Px)
       return dimension.value;
@@ -433,9 +445,42 @@ export class FlexboxAdapter {
         ? parent.innerBound.height
         : this._applicationService.app.stage.height;
 
+    // Flex 1 variant
+    if (
+      parent &&
+      parentLayoutAlign!.displayMode === LayoutDisplayMode.Flex &&
+      ((axis === CElementDimensionAxis.Width &&
+        parentLayoutAlign!.flexDirection === FlexDirection.Row) ||
+        (axis === CElementDimensionAxis.Height &&
+          parentLayoutAlign!.flexDirection === FlexDirection.Column)) &&
+      dimension.measurement === CElementDimensionMeasurement.Percent &&
+      dimension.value === 100
+    ) {
+      if (axis === CElementDimensionAxis.Width) {
+        const sumAllOtherChildrenDimensionInPx = otherChildrenCaels!.reduce(
+          (sum, currentChild) => sum + currentChild.outerBound.width.valueInPx,
+          0
+        );
+
+        return parent.innerBound.width - sumAllOtherChildrenDimensionInPx;
+      } else if (axis === CElementDimensionAxis.Height) {
+        const sumAllOtherChildrenDimensionInPx = otherChildrenCaels!.reduce(
+          (sum, currentChild) => sum + currentChild.outerBound.height.valueInPx,
+          0
+        );
+
+        return parent.innerBound.height - sumAllOtherChildrenDimensionInPx;
+      } else
+        throw Error(
+          `Dimension axis ${CElementDimensionAxis[axis]} is not suppported`
+        );
+    }
+
     if (dimension.measurement === CElementDimensionMeasurement.Percent) {
       return parentDimValPx * (dimension.value / 100);
-    } else if (
+    }
+
+    if (
       dimension.measurement ===
       CElementLayoutGridDimensionMeasurement.LayoutGrid
     ) {
@@ -471,8 +516,11 @@ export class FlexboxAdapter {
     if (
       position.measurement === CElementLayoutGridDimensionMeasurement.LayoutGrid
     ) {
-      return parent.innerPosition.x + this._editorLayoutGridService.calculatePositionColumnsInPx(
-        position.value
+      return (
+        parent.innerPosition.x +
+        this._editorLayoutGridService.calculatePositionColumnsInPx(
+          position.value
+        )
       );
     }
 

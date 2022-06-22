@@ -16,13 +16,17 @@ import {
   lastCelementRemovedSelector,
 } from "../features/ui-editor/celement/celement.selectors";
 import { ApplicationService } from "../features/application/application.service";
+import { Subscription } from "rxjs";
 
 @injectable()
 export class CanvaElementService {
   @inject(ApplicationService)
   private readonly _applicationService!: ApplicationService;
 
-  private readonly _els = new Map<string, CanvaElement>();
+  private readonly _els = new Map<
+    string,
+    { cael: CanvaElement; subscriptions: Subscription[] }
+  >();
 
   private _stageInteractionManager!: PIXI.InteractionManager;
 
@@ -30,6 +34,8 @@ export class CanvaElementService {
     Need to determinate if selected element was not changed on mouse click
    */
   private _currentSelectedCelId: string | undefined = undefined;
+
+  private _currentResizingCaelId: string | undefined;
 
   constructor() {
     this.bindEvents();
@@ -65,22 +71,26 @@ export class CanvaElementService {
     });
   }
 
-  // createCael(
-  //   x: number,
-  //   y: number,
-  //   width: CElementDimension,
-  //   height: CElementDimension,
-  //   fill = 0xed04ff,
-  //   toParentId?: string
-  // )
   createCael(celToCreate: CElementToCreate, toParentId?: string) {
-    const parentCael = toParentId ? this._els.get(toParentId) : undefined;
+    const parentCael = toParentId ? this._els.get(toParentId)?.cael : undefined;
 
     const cael = new CanvaElement(celToCreate, parentCael);
-    this._els.set(cael.id, cael);
 
-    cael.onResizeStop.subscribe(() => {
-      this.stopCelResizing();
+    const onCaelResizingSubscription = cael.onCaelResizing.subscribe(
+      (caelId) => {
+        this._currentResizingCaelId = caelId;
+      }
+    );
+    const onCaelMouseUpSubscription = cael.onCaelMouseUp.subscribe((caelId) => {
+      if (this._currentResizingCaelId) {
+        this._els.get(this._currentResizingCaelId)?.cael.resizers.stopMoving();
+        this._currentResizingCaelId = undefined;
+      }
+    });
+
+    this._els.set(cael.id, {
+      cael,
+      subscriptions: [onCaelResizingSubscription, onCaelMouseUpSubscription],
     });
 
     if (parentCael) {
@@ -96,19 +106,21 @@ export class CanvaElementService {
   }
 
   getCael(id: string) {
-    return this._els.get(id);
+    return this._els.get(id)?.cael;
   }
 
   getAllCaels() {
-    return Array.from(this._els.values());
+    return Array.from(this._els.values()).map(x => x.cael);
   }
 
   removeCael(celId: string) {
-    const cael = this._els.get(celId);
+    const map = this._els.get(celId);
+    if (!map?.cael) return;
 
-    if (!cael) return;
+    const {cael, subscriptions: caelSubscriptions} = map;
 
     cael.destroy();
+    caelSubscriptions.forEach(x => x.unsubscribe());
     this._els.delete(celId);
     cael.children.forEach((child) => this._els.delete(child.id));
     cael.parent?.redraw();
@@ -140,7 +152,7 @@ export class CanvaElementService {
   }
 
   private stopCelResizing() {
-    this._els.forEach((cel) => {
+    Array.from(this._els.values()).map(x => x.cael).forEach((cel) => {
       cel.resizers.forEach((res) => (res.moving = false));
     });
   }

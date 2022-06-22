@@ -73,7 +73,8 @@ export class CanvaElementResizer {
   }
 
   destroy() {
-    this._circle.destroy();
+    this._circle.removeAllListeners();
+    this._circle.destroy();    
   }
 
   private bindevents() {
@@ -82,11 +83,15 @@ export class CanvaElementResizer {
       this._startMoveX = event.data.global.x;
       this._startMoveY = event.data.global.y;
 
+      this._cael.onCaelResizing.next(this._cael.id);
+
       event.stopPropagation();
     });
 
     this._circle.on("mouseup", (event) => {
-      this._cael.onResizeStop.next(this._cael.id);
+      this._cael.resizers.stopMoving();
+      this._cael.onCaelResizing.next(undefined);
+      // this._cael.onResizeStop.next(this._cael.id);      
 
       event.stopPropagation();
     });
@@ -174,6 +179,7 @@ export class CanvaElementResizer {
               parentCaelBound.width,
               parentCaelBound.height
             ),
+            needChildrenToParentSync: true
           })
         );
       })

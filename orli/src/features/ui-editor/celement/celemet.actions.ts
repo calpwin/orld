@@ -29,10 +29,12 @@ export const celementChangePositionQuietAction = createAction<{
 export const celementTransformAction = createAction<{
   celId: string;
   transformation: CElementTransformation;
+  needChildrenToParentSync: boolean // If true and parent exist its children Caels will be sync with parent
 }>("celement/trasform");
 
 /** Set cel layout align */
 export const celementSetLayoutAlignAction = createAction<{
   celId: string;
   layoutAlign: CElementLayoutAlignUpdate;
+  needChildrenToParentSync: boolean // If true and parent exist its children Caels will be sync with parent
 }>("celement/setLayoutPosition");

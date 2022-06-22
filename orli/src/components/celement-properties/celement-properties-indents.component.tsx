@@ -237,6 +237,7 @@ export class CElementPropertiesIndentsComponent extends React.Component<
           indent && indentType === "margin" ? [indent] : undefined,
           indent && indentType === "padding" ? [indent] : undefined
         ),
+        needChildrenToParentSync: true
       })
     );
   }

@@ -152,7 +152,11 @@ export class CanvaElement {
     this._isMovaeble = value;
   }
 
-  onResizeStop = new Subject<string>();
+  // onResizeStop = new Subject<string>();
+  // On cael start resizing event. @Param caelId: string | undefined
+  onCaelResizing = new Subject<string | undefined>();
+  // On Cael mouseup event. @Param caelId: string
+  onCaelMouseUp = new Subject<string>();
 
   constructor(celToCreate: CElementToCreate, parentCael?: CanvaElement) {
     this.id = !parentCael
@@ -163,7 +167,10 @@ export class CanvaElement {
 
     this._flexboxAdapter = Ioc.Conatiner.get<FlexboxAdapter>(FlexboxAdapter);
 
-    this.initialize(celToCreate, this.isRootCael ? 0x99aaaa : 0xed04ff);
+    this.initialize(
+      celToCreate,
+      this.isRootCael ? 0x99aaaa : 0x1000000 + Math.random() * 0xffffff
+    );
 
     this.bindEvents();
   }
@@ -185,8 +192,9 @@ export class CanvaElement {
     return this._children.get(child.id);
   }
 
-  /* 
+  /**
     Set element transformation
+  * @param needChildrenToParentSync If true and parent exist its children Caels will be sync with parent
   */
   setTransformation(
     x?: CElementDimension<CElementDimensionExtendMeasurement>,
@@ -194,9 +202,17 @@ export class CanvaElement {
     width?: CElementDimension<CElementDimensionExtendMeasurement>,
     height?: CElementDimension<CElementDimensionMeasurement>,
     margings?: CElementIndent[],
-    paddings?: CElementIndent[]
+    paddings?: CElementIndent[],
+    needChildrenToParentSync = false
   ) {
     const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+    const parentLayoutAlign = this.parent
+      ? store.getState().editor.celements[this.parent.id].layoutAlign
+      : undefined;
+    const otherChildrenCaels = this.parent?.children.filter(
+      (child) => child.id !== this.id
+    );
+
     const xInPx =
       x && !this.isRootCael
         ? this._flexboxAdapter.calculateCaelPositionInPx(
@@ -211,7 +227,9 @@ export class CanvaElement {
           width,
           CElementDimensionAxis.Width,
           layoutAlign,
-          this._parent
+          this._parent!,
+          parentLayoutAlign,
+          otherChildrenCaels
         )
       : null;
     const heightInPx = height
@@ -219,7 +237,9 @@ export class CanvaElement {
           height,
           CElementDimensionAxis.Height,
           layoutAlign,
-          this._parent
+          this._parent!,
+          parentLayoutAlign,
+          otherChildrenCaels
         )
       : null;
 
@@ -250,6 +270,11 @@ export class CanvaElement {
     this.synchronizeInnerBoundAndPosition();
 
     this.redraw(changedAxis);
+
+    if (this.parent && needChildrenToParentSync) {
+        this._flexboxAdapter.syncChildrenPosition(this.parent, parentLayoutAlign!);
+        this._flexboxAdapter.syncChildrenBound(this.parent, changedAxis);
+    }
   }
 
   /**
@@ -401,6 +426,12 @@ export class CanvaElement {
 
   private initialize(celToCreate: CElementToCreate, fill: number) {
     const layoutAlign = new CElementLayoutAlign();
+    const parentLayoutAlign = this.parent
+      ? store.getState().editor.celements[this.parent.id].layoutAlign
+      : undefined;
+    const otherChildrenCaels = this.parent?.children.filter(
+      (child) => child.id !== this.id
+    );
 
     const xInPx = !this.isRootCael
       ? this._flexboxAdapter.calculateCaelPositionInPx(
@@ -414,14 +445,18 @@ export class CanvaElement {
       celToCreate.width,
       CElementDimensionAxis.Width,
       layoutAlign,
-      undefined
+      this.parent,
+      parentLayoutAlign,
+      otherChildrenCaels
     );
     const heightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
       celToCreate.height,
       CElementDimensionAxis.Height,
       layoutAlign,
-      undefined
-    ); // TODO set parent
+      this.parent,
+      parentLayoutAlign,
+      otherChildrenCaels
+    );
 
     this._rectangle = new Graphics();
     this._rectangle.interactive = true;
@@ -450,7 +485,7 @@ export class CanvaElement {
     this.synchronizeInnerBoundAndPosition();
 
     this._rectangle.on("mouseup", (event) => {
-      this._resizers.stopMoving();
+      this.onCaelMouseUp.next(this.id);
     });
 
     this.makeSelectable();
@@ -487,7 +522,8 @@ export class CanvaElement {
           newVal.transformation.width,
           newVal.transformation.height,
           newVal.transformation.margins,
-          newVal.transformation.paddings
+          newVal.transformation.paddings,
+          newVal.needChildrenToParentSync
         );
       })
     );
@@ -506,6 +542,14 @@ export class CanvaElement {
   ) {
     if (!this.parent) return;
 
+    const layoutAlign = store.getState().editor.celements[this.id].layoutAlign;
+    const parentLayoutAlign = this.parent
+      ? store.getState().editor.celements[this.parent.id].layoutAlign
+      : undefined;
+    const otherChildrenCaels = this.parent?.children.filter(
+      (child) => child.id !== this.id
+    );
+
     let needRedraw = false;
     let changedAxis =
       CElementDimensionAxis.Width | CElementDimensionAxis.Height;
@@ -517,8 +561,15 @@ export class CanvaElement {
         (parentChangeDimensionAxis & CElementDimensionAxis.Width) ===
           CElementDimensionAxis.Width)
     ) {
-      const updatedWidthInPx =
-        (this.parent.innerBound.width * this.outerBound.width.value) / 100;
+      const updatedWidthInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
+        this.outerBound.width,
+        CElementDimensionAxis.Width,
+        layoutAlign,
+        this._parent!,
+        parentLayoutAlign,
+        otherChildrenCaels
+      );
+
       if (updatedWidthInPx !== this._outerWidth.valueInPx) {
         this._outerWidth.valueInPx =
           updatedWidthInPx -
@@ -537,8 +588,15 @@ export class CanvaElement {
         (parentChangeDimensionAxis & CElementDimensionAxis.Height) ===
           CElementDimensionAxis.Height)
     ) {
-      const updatedHeightInPx =
-        (this.parent.innerBound.height * this.outerBound.height.value) / 100;
+      const updatedHeightInPx = this._flexboxAdapter.calculateCaelDimensionInPx(
+        this.outerBound.height,
+        CElementDimensionAxis.Height,
+        layoutAlign,
+        this._parent!,
+        parentLayoutAlign,
+        otherChildrenCaels
+      );
+
       if (updatedHeightInPx !== this._outerHeight.valueInPx) {
         this._outerHeight.valueInPx =
           updatedHeightInPx -

@@ -502,6 +502,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
         layoutAlign: {
           displayMode: displayMode,
         },
+        needChildrenToParentSync: true
       })
     );
   };
@@ -521,6 +522,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           vertical:
             layourOrientation == LayoutOrientation.Vertical ? align : undefined,
         },
+        needChildrenToParentSync: true
       })
     );
   }
@@ -553,6 +555,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
               ? FlexDirection.Row
               : FlexDirection.Column,
         },
+        needChildrenToParentSync: true
       })
     );
   };
@@ -584,6 +587,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
           width,
           height
         ),
+        needChildrenToParentSync: true
       })
     );
   };
@@ -649,6 +653,7 @@ export class CElementPropertiesComponent extends React.Component<{}, State> {
       celementTransformAction({
         celId: store.getState().editor.currentSelectedCElementId!,
         transformation: new CElementTransformation(x, undefined, width, height),
+        needChildrenToParentSync: true
       })
     );
   };
